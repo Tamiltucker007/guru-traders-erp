@@ -29,6 +29,11 @@ class NumberSeriesSeeder extends Seeder
             ],
         ];
 
+        // inward-entry is financial-year-scoped (GT/INW/xxx/<FY>) and its rows
+        // are created on demand by InwardEntryService::ensureNumberSeries() —
+        // seeding a financial_year-less row here would just be a dead entry
+        // the lookup (keyed on module + financial_year) never matches.
+
         foreach ($series as $row) {
             NumberSeries::firstOrCreate(
                 ['module' => $row['module'], 'financial_year' => $row['financial_year']],

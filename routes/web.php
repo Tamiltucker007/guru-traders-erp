@@ -10,6 +10,7 @@ use App\Http\Controllers\Masters\JobberController;
 use App\Http\Controllers\Masters\MarkupController;
 use App\Http\Controllers\Masters\ProductController;
 use App\Http\Controllers\Masters\SupplierController;
+use App\Http\Controllers\Procurement\InwardEntryController;
 use App\Http\Controllers\Procurement\PurchaseOrderController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Sales\InquiryController;
@@ -187,6 +188,13 @@ Route::middleware('auth')->group(function () {
     Route::prefix('procurement')->name('procurement.')->group(function () {
         Route::resource('purchase-orders', PurchaseOrderController::class)
             ->parameters(['purchase-orders' => 'purchaseOrder']);
+
+        Route::get('inward-entries/po-details/{purchaseOrder}', [InwardEntryController::class, 'poDetails'])
+            ->name('inward-entries.po-details');
+        Route::post('inward-entries/{inwardEntry}/approve', [InwardEntryController::class, 'approve'])
+            ->name('inward-entries.approve');
+        Route::resource('inward-entries', InwardEntryController::class)
+            ->parameters(['inward-entries' => 'inwardEntry']);
     });
 
     /*

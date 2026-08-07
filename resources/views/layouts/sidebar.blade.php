@@ -224,7 +224,12 @@
                         </li>
                     @endcan
                     @can('inward-entry.view')
-                        <li class="nav-item"><a href="#" class="nav-link soon"><i class="nav-icon bi bi-box-arrow-in-down"></i><p>Goods Inward</p></a></li>
+                        <li class="nav-item">
+                            <a href="{{ route('procurement.inward-entries.index') }}"
+                               class="nav-link {{ request()->routeIs('procurement.inward-entries.*') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-box-arrow-in-down"></i><p>Goods Inward</p>
+                            </a>
+                        </li>
                     @endcan
                 @endif
 

@@ -133,7 +133,7 @@ return [
             'purchase-order' => ['label' => 'Purchase Orders', 'actions' => ['view', 'create', 'edit', 'delete', 'approve', 'export'], 'built' => true],
             // "approve" is the QC pass: the receiver records what arrived, the
             // checker approves what is good. Two people, one screen, one row.
-            'inward-entry'   => ['label' => 'Goods Inward',    'actions' => ['view', 'create', 'edit', 'delete', 'approve'], 'built' => false],
+            'inward-entry'   => ['label' => 'Goods Inward',    'actions' => ['view', 'create', 'edit', 'delete', 'approve'], 'built' => true],
         ],
 
         'Export' => [

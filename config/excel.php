@@ -128,7 +128,7 @@ return [
             'enclosure'        => '"',
             'escape_character' => '\\',
             'contiguous'       => false,
-            'input_encoding'   => Csv::GUESS_ENCODING,
+            'input_encoding'   => class_exists(Csv::class) ? Csv::GUESS_ENCODING : 'UTF-8',
         ],
 
         /*
@@ -178,21 +178,21 @@ return [
     |
     */
     'extension_detector' => [
-        'xlsx'     => Excel::XLSX,
-        'xlsm'     => Excel::XLSX,
-        'xltx'     => Excel::XLSX,
-        'xltm'     => Excel::XLSX,
-        'xls'      => Excel::XLS,
-        'xlt'      => Excel::XLS,
-        'ods'      => Excel::ODS,
-        'ots'      => Excel::ODS,
-        'slk'      => Excel::SLK,
-        'xml'      => Excel::XML,
-        'gnumeric' => Excel::GNUMERIC,
-        'htm'      => Excel::HTML,
-        'html'     => Excel::HTML,
-        'csv'      => Excel::CSV,
-        'tsv'      => Excel::TSV,
+        'xlsx'     => class_exists(Excel::class) ? Excel::XLSX : 'Xlsx',
+        'xlsm'     => class_exists(Excel::class) ? Excel::XLSX : 'Xlsx',
+        'xltx'     => class_exists(Excel::class) ? Excel::XLSX : 'Xlsx',
+        'xltm'     => class_exists(Excel::class) ? Excel::XLSX : 'Xlsx',
+        'xls'      => class_exists(Excel::class) ? Excel::XLS : 'Xls',
+        'xlt'      => class_exists(Excel::class) ? Excel::XLS : 'Xls',
+        'ods'      => class_exists(Excel::class) ? Excel::ODS : 'Ods',
+        'ots'      => class_exists(Excel::class) ? Excel::ODS : 'Ods',
+        'slk'      => class_exists(Excel::class) ? Excel::SLK : 'Slk',
+        'xml'      => class_exists(Excel::class) ? Excel::XML : 'Xml',
+        'gnumeric' => class_exists(Excel::class) ? Excel::GNUMERIC : 'Gnumeric',
+        'htm'      => class_exists(Excel::class) ? Excel::HTML : 'Html',
+        'html'     => class_exists(Excel::class) ? Excel::HTML : 'Html',
+        'csv'      => class_exists(Excel::class) ? Excel::CSV : 'Csv',
+        'tsv'      => class_exists(Excel::class) ? Excel::TSV : 'Tsv',
 
         /*
         |--------------------------------------------------------------------------
@@ -203,7 +203,7 @@ return [
         | Available options: Excel::MPDF | Excel::TCPDF | Excel::DOMPDF
         |
         */
-        'pdf'      => Excel::DOMPDF,
+        'pdf'      => class_exists(Excel::class) ? Excel::DOMPDF : 'Dompdf',
     ],
 
     /*

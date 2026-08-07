@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * One dated line of the PO's delivery timeline. Plain hand-entered rows for
- * now — the prototype describes Goods Inward auto-populating this list once
- * that module exists, which it does not yet.
+ * One dated line of the PO's delivery timeline. Rows come from two sources:
+ * hand-entered via PurchaseOrderService::syncTimeline() (full delete/rebuild
+ * on every PO save) and auto-appended by InwardEntryService on each goods
+ * receipt (idempotent updateOrCreate keyed by note text). Saving the PO's own
+ * timeline grid after a Goods Inward receipt will wipe the auto-appended rows
+ * since syncTimeline() doesn't distinguish the two sources.
  */
 class PurchaseOrderTimelineEntry extends Model
 {
