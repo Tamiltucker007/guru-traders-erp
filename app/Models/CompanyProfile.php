@@ -44,11 +44,35 @@ class CompanyProfile extends Model
 
     public function hasLogo(): bool
     {
-        return filled($this->logo_path);
+        return is_file($this->logoAbsolutePath() ?? '');
     }
 
     public function logoUrl(): ?string
     {
-        return $this->hasLogo() ? Storage::disk('public')->url($this->logo_path) : null;
+        if (filled($this->logo_path) && Storage::disk('public')->exists($this->logo_path)) {
+            return Storage::disk('public')->url($this->logo_path);
+        }
+
+        return is_file(public_path('images/gt-logo.png'))
+            ? asset('images/gt-logo.png')
+            : null;
+    }
+
+    /**
+     * Absolute filesystem path for DomPDF <img src>. DomPDF cannot load
+     * http:// URLs reliably, so PDF blades must use this — not logoUrl().
+     */
+    public function logoAbsolutePath(): ?string
+    {
+        if (filled($this->logo_path)) {
+            $stored = Storage::disk('public')->path($this->logo_path);
+            if (is_file($stored)) {
+                return $stored;
+            }
+        }
+
+        $bundled = public_path('images/gt-logo.png');
+
+        return is_file($bundled) ? $bundled : null;
     }
 }

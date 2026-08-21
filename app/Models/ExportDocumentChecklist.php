@@ -50,14 +50,19 @@ class ExportDocumentChecklist extends Model
         'reference_no',
         'amount',
         'remarks',
+        'matched_buyer_id',
+        'matched_supplier_id',
+        'matched_order_confirmation_id',
+        'ocr_verification',
     ];
 
     protected function casts(): array
     {
         return [
-            'uploaded_at'  => 'datetime',
-            'generated_at' => 'datetime',
-            'amount'       => 'decimal:2',
+            'uploaded_at'      => 'datetime',
+            'generated_at'     => 'datetime',
+            'amount'           => 'decimal:2',
+            'ocr_verification' => 'array',
         ];
     }
 
@@ -69,6 +74,21 @@ class ExportDocumentChecklist extends Model
     public function type(): BelongsTo
     {
         return $this->belongsTo(DocumentChecklistType::class, 'document_checklist_type_id');
+    }
+
+    public function matchedBuyer(): BelongsTo
+    {
+        return $this->belongsTo(Buyer::class, 'matched_buyer_id');
+    }
+
+    public function matchedSupplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class, 'matched_supplier_id');
+    }
+
+    public function matchedOrderConfirmation(): BelongsTo
+    {
+        return $this->belongsTo(OrderConfirmation::class, 'matched_order_confirmation_id');
     }
 
     public function statusLabel(): string

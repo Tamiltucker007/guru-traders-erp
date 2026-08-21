@@ -24,11 +24,12 @@
 </head>
 <body>
 
-    <p class="title">Packing List — For Our Record</p>
+    <x-pdf.letterhead :company="$company" title="Packing List" subtitle="For Our Record (with Supplier)" />
 
     <table class="frame" style="margin-bottom:8px">
         <tr>
             <td style="width:55%">
+                <div class="lbl">Exporter</div>
                 <strong>{{ $company->company_name }}</strong>
                 <div class="pre">{{ $company->address }}</div>
             </td>
@@ -113,10 +114,15 @@
         <tr>
             <td class="right sign-block" style="border:none">
                 For {{ $company->company_name }}<br><br><br>
-                <span class="small">Authorised Signatory</span>
+                <span class="small">{{ $company->signatory_name ?: 'Authorised Signatory' }}</span>
+                @if($company->signatory_designation)
+                    <br><span class="small">{{ $company->signatory_designation }}</span>
+                @endif
             </td>
         </tr>
     </table>
+
+    <x-pdf.footer :company="$company" />
 
 </body>
 </html>

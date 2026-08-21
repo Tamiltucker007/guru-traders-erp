@@ -39,11 +39,16 @@
 @endphp
 
 @if($cartons->isEmpty())
+    <x-pdf.letterhead :company="$company" title="Packing List" subtitle="For Export Documentation" />
     <p>No cartons have been recorded for this Export Document yet — add them on the Edit screen before generating this packing list.</p>
+    <x-pdf.footer :company="$company" />
 @else
     @foreach($sheets as $index => $sheetCartons)
         @php $sheetNo = $index + 1; @endphp
         <div class="sheet">
+            @if($sheetNo === 1)
+                <x-pdf.letterhead :company="$company" title="Packing List" subtitle="For Export Documentation" />
+            @endif
             <div class="title-row">
                 <span class="title">PACKING LIST</span>
                 <span class="page-no">{{ $sheetNo == 1 ? '' : "Continuation Sheet {$sheetNo}/{$totalSheets}" }}</span>
@@ -179,10 +184,15 @@
                 <tr>
                     <td class="right sign-block" style="border:none">
                         For {{ $company->company_name }}<br><br><br>
-                        <span class="small">Authorised Signatory</span>
+                        <span class="small">{{ $company->signatory_name ?: 'Authorised Signatory' }}</span>
+                        @if($company->signatory_designation)
+                            <br><span class="small">{{ $company->signatory_designation }}</span>
+                        @endif
                     </td>
                 </tr>
             </table>
+
+            <x-pdf.footer :company="$company" />
         </div>
     @endforeach
 @endif

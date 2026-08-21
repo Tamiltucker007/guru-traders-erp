@@ -87,9 +87,22 @@
                 display: flex; align-items: center;
                 transition: background-color .12s ease, color .12s ease;
             }
+            .app-sidebar .sidebar-menu .nav-link > p {
+                margin: 0;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                flex: 1 1 auto;
+                min-width: 0;
+                display: block;
+            }
+            .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-menu .nav-link > p {
+                display: none;
+            }
             .app-sidebar .sidebar-menu .nav-link .nav-icon {
                 font-size: 1rem;
                 width: 1.5rem;
+                flex-shrink: 0;
                 color: #8b95a5;
                 transition: color .12s ease;
             }
@@ -447,6 +460,46 @@
 
             <!-- Sidebar -->
             @include('layouts.sidebar')
+            <script>
+                /**
+                 * Keep the sidebar scrolled to the item just clicked.
+                 *
+                 * A full page load otherwise resets .sidebar-wrapper to the top,
+                 * so Finance / Administration clicks look like a jump back to
+                 * Dashboard. Restore the last scroll, then bring the active
+                 * link into view if it still sits outside the rail.
+                 */
+                (function () {
+                    var wrap = document.querySelector('.app-sidebar .sidebar-wrapper');
+                    if (!wrap) return;
+
+                    var key = 'lte.sidebar.scrollTop';
+
+                    try {
+                        var saved = sessionStorage.getItem(key);
+                        if (saved !== null) {
+                            wrap.scrollTop = parseInt(saved, 10) || 0;
+                        }
+                    } catch (e) { /* private mode */ }
+
+                    var active = wrap.querySelector('.sidebar-menu a.nav-link.active');
+                    if (active) {
+                        var wrapBox = wrap.getBoundingClientRect();
+                        var itemBox = active.getBoundingClientRect();
+                        if (itemBox.bottom > wrapBox.bottom || itemBox.top < wrapBox.top) {
+                            active.scrollIntoView({ block: 'center' });
+                        }
+                    }
+
+                    var persist = function () {
+                        try { sessionStorage.setItem(key, String(wrap.scrollTop)); } catch (e) {}
+                    };
+
+                    wrap.addEventListener('scroll', persist, { passive: true });
+                    wrap.addEventListener('click', persist);
+                    window.addEventListener('pagehide', persist);
+                })();
+            </script>
 
             <!-- App Main -->
             <main class="app-main">

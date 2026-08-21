@@ -12,6 +12,8 @@ use App\Models\OrderConfirmation;
 use App\Models\Port;
 use App\Models\ShipmentMethod;
 use App\Services\Export\ExportDocumentService;
+use App\Services\Export\OcrFieldVerifier;
+use App\Services\Export\OcrOrderContextBuilder;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Barryvdh\DomPDF\PDF as PdfDocument;
 use Illuminate\Http\RedirectResponse;
@@ -25,8 +27,11 @@ use RuntimeException;
 
 class ExportDocumentController extends Controller implements HasMiddleware
 {
-    public function __construct(private readonly ExportDocumentService $documents)
-    {
+    public function __construct(
+        private readonly ExportDocumentService $documents,
+        private readonly OcrOrderContextBuilder $orderContext,
+        private readonly OcrFieldVerifier $verifier,
+    ) {
     }
 
     /**
@@ -46,7 +51,7 @@ class ExportDocumentController extends Controller implements HasMiddleware
     public function index(Request $request): View
     {
         $documents = ExportDocument::query()
-            ->with(['buyer:id,company_name,display_code', 'orderConfirmation:id,oc_num', 'checklist'])
+            ->with(['buyer:id,company_name,display_code', 'orderConfirmation:id,oc_num', 'checklist.type'])
             ->when(
                 $request->filled('buyer_id'),
                 fn ($q) => $q->where('buyer_id', $request->integer('buyer_id'))
@@ -57,24 +62,38 @@ class ExportDocumentController extends Controller implements HasMiddleware
             ->paginate(15)
             ->withQueryString();
 
+        $ocrDashboards = [];
+        foreach ($documents as $document) {
+            $ocrDashboards[$document->id] = $this->verifier->documentDashboard($document);
+        }
+
         return view('export.documents.index', [
-            'documents' => $documents,
-            'buyers'    => Buyer::active()->orderBy('company_name')->get()->pluck('label', 'id'),
-            'statuses'  => ExportDocument::STATUSES,
-            'filters'   => $request->only('search', 'status', 'buyer_id', 'sort', 'direction'),
+            'documents'     => $documents,
+            'ocrDashboards' => $ocrDashboards,
+            'buyers'        => Buyer::active()->orderBy('company_name')->get()->pluck('label', 'id'),
+            'statuses'      => ExportDocument::STATUSES,
+            'filters'       => $request->only('search', 'status', 'buyer_id', 'sort', 'direction'),
         ]);
     }
 
     public function show(ExportDocument $document): View
     {
+        $document->load([
+            'orderConfirmation', 'buyer', 'currency', 'incoterm',
+            'portOfLoading', 'portOfDischarge', 'shipmentMethod',
+            'items' => fn ($q) => $q->with(['product', 'colours.sizes']),
+            'checklist' => fn ($q) => $q->with([
+                'type',
+                'matchedBuyer:id,display_code,company_name',
+                'matchedSupplier:id,display_code,company_name',
+                'matchedOrderConfirmation:id,oc_num,buyer_ref',
+            ])->orderBy('id'),
+            'creator', 'updater',
+        ]);
+
         return view('export.documents.show', [
-            'document' => $document->load([
-                'orderConfirmation', 'buyer', 'currency', 'incoterm',
-                'portOfLoading', 'portOfDischarge', 'shipmentMethod',
-                'items' => fn ($q) => $q->with(['product', 'colours.sizes']),
-                'checklist' => fn ($q) => $q->with('type')->orderBy('id'),
-                'creator', 'updater',
-            ]),
+            'document' => $document,
+            'orderContext' => $this->orderContext->build($document),
         ]);
     }
 

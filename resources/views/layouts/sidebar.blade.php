@@ -252,14 +252,18 @@
                     @can('export-document.view')
                         <li class="nav-item">
                             <a href="{{ route('export.documents.index') }}"
-                               class="nav-link {{ request()->routeIs('export.documents.*') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-files"></i><p>Export Documents</p>
+                               class="nav-link {{ request()->routeIs('export.documents.*') ? 'active' : '' }}"
+                               title="Export Documents">
+                                <i class="nav-icon bi bi-file-earmark-text"></i>
+                                <p>Export Documents</p>
                             </a>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('export.ocr.index') }}"
-                               class="nav-link {{ request()->routeIs('export.ocr.*') ? 'active' : '' }}">
-                                <i class="nav-icon bi bi-stars"></i><p>Document OCR</p>
+                               class="nav-link {{ request()->routeIs('export.ocr.*') ? 'active' : '' }}"
+                               title="Document OCR">
+                                <i class="nav-icon bi bi-stars"></i>
+                                <p>Document OCR</p>
                             </a>
                         </li>
                     @endcan
@@ -346,8 +350,9 @@
                      none had a screen, and a menu full of links that go
                      nowhere is worse than a short menu.
 
-                     User Management is a treeview because its three screens are
-                     one subject and are opened together.
+                     Users, Roles and Permissions are ordinary links, not a
+                     treeview: a parent href="#" never opened a page, and the
+                     nested items sat below the fold at the bottom of the rail.
 
                      No "My Profile" entry — the header's user dropdown already
                      carries Profile and Logout, top right on every page.
@@ -363,39 +368,30 @@
                             </a>
                         </li>
                     @endcan
-
-                    <li class="nav-item {{ request()->routeIs('user-management.*') && ! request()->routeIs('user-management.company-profile.*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->routeIs('user-management.*') ? 'active' : '' }}">
-                            <i class="nav-icon bi bi-people"></i>
-                            <p>User Management<i class="nav-arrow bi bi-chevron-right"></i></p>
-                        </a>
-                        <ul class="nav nav-treeview">
-                            @can('user.view')
-                                <li class="nav-item">
-                                    <a href="{{ route('user-management.users.index') }}"
-                                       class="nav-link {{ request()->routeIs('user-management.users.*') ? 'active' : '' }}">
-                                        <i class="nav-icon bi bi-dot"></i><p>Users</p>
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('role.view')
-                                <li class="nav-item">
-                                    <a href="{{ route('user-management.roles.index') }}"
-                                       class="nav-link {{ request()->routeIs('user-management.roles.*') ? 'active' : '' }}">
-                                        <i class="nav-icon bi bi-dot"></i><p>Roles</p>
-                                    </a>
-                                </li>
-                            @endcan
-                            @can('permission.view')
-                                <li class="nav-item">
-                                    <a href="{{ route('user-management.permissions.index') }}"
-                                       class="nav-link {{ request()->routeIs('user-management.permissions.*') ? 'active' : '' }}">
-                                        <i class="nav-icon bi bi-dot"></i><p>Permissions</p>
-                                    </a>
-                                </li>
-                            @endcan
-                        </ul>
-                    </li>
+                    @can('user.view')
+                        <li class="nav-item">
+                            <a href="{{ route('user-management.users.index') }}"
+                               class="nav-link {{ request()->routeIs('user-management.users.*') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-people"></i><p>User Management</p>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('role.view')
+                        <li class="nav-item">
+                            <a href="{{ route('user-management.roles.index') }}"
+                               class="nav-link {{ request()->routeIs('user-management.roles.*') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-shield-check"></i><p>Roles</p>
+                            </a>
+                        </li>
+                    @endcan
+                    @can('permission.view')
+                        <li class="nav-item">
+                            <a href="{{ route('user-management.permissions.index') }}"
+                               class="nav-link {{ request()->routeIs('user-management.permissions.*') ? 'active' : '' }}">
+                                <i class="nav-icon bi bi-key"></i><p>Permissions</p>
+                            </a>
+                        </li>
+                    @endcan
                 @endif
 
             </ul>

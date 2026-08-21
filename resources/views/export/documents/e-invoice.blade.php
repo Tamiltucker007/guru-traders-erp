@@ -24,6 +24,8 @@
 </head>
 <body>
 
+    <x-pdf.letterhead :company="$company" title="Tax Invoice" subtitle="Supply meant for export on payment of IGST" />
+
     <p class="title">Tax Invoice</p>
     <p class="subtitle">(SUPPLY MEANT FOR EXPORT ON PAYMENT OF IGST)</p>
 
@@ -209,9 +211,7 @@
         </tr>
     </table>
 
-    <div class="small text-center" style="margin-top:6px">
-        This is a Computer Generated Invoice
-    </div>
+    <x-pdf.footer :company="$company" note="Computer generated tax invoice." />
 
 </body>
 </html>

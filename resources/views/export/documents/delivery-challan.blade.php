@@ -22,6 +22,8 @@
 </head>
 <body>
 
+    <x-pdf.letterhead :company="$company" title="Delivery Challan" subtitle="Original for Recipient" />
+
     <table class="frame" style="margin-bottom:0">
         <tr>
             <td class="title" style="border-bottom:none">DELIVERY CHALLAN</td>
@@ -159,9 +161,7 @@
         </tbody>
     </table>
 
-    <div style="margin-top:6px; font-size:9px; color:#555;">
-        This is a computer generated document — Guru Traders.
-    </div>
+    <x-pdf.footer :company="$company" />
 
 </body>
 </html>

@@ -28,11 +28,12 @@
 
     @forelse($document->cartons as $carton)
         <div class="carton-page">
+            <x-pdf.letterhead :company="$company" title="Packing Slip" :subtitle="'Carton / Bale No. '.$carton->carton_no" />
+
             <table class="frame" style="margin-bottom:8px">
                 <tr>
                     <td style="width:45%">
-                        <div class="title">Packing Slip</div>
-                        <div class="lbl" style="margin-top:6px">Carton / Bale No.</div>
+                        <div class="lbl">Carton / Bale No.</div>
                         <div><strong>{{ $carton->carton_no }}</strong></div>
                         <div class="lbl" style="margin-top:6px">Invoice No.</div>
                         <div>{{ $document->invoice_no ?: $document->doc_num }}</div>
@@ -40,6 +41,7 @@
                         <div>{{ ($document->invoice_date ?? $document->shipment_date)?->format('d-m-Y') ?? '—' }}</div>
                     </td>
                     <td style="width:55%">
+                        <div class="lbl">Exporter</div>
                         <div class="company-name">{{ $company->company_name }}</div>
                         @if($company->tagline)<div class="company-tag">{{ $company->tagline }}</div>@endif
                         <div class="pre" style="margin-top:4px">{{ $company->address }}</div>
@@ -89,13 +91,20 @@
                 <tr>
                     <td class="right sign-block" style="border:none">
                         For {{ $company->company_name }}<br><br><br>
-                        <span class="small">Authorised Signatory</span>
+                        <span class="small">{{ $company->signatory_name ?: 'Authorised Signatory' }}</span>
+                        @if($company->signatory_designation)
+                            <br><span class="small">{{ $company->signatory_designation }}</span>
+                        @endif
                     </td>
                 </tr>
             </table>
+
+            <x-pdf.footer :company="$company" />
         </div>
     @empty
+        <x-pdf.letterhead :company="$company" title="Packing List" subtitle="Without Supplier (for Carton)" />
         <p>No cartons have been recorded for this Export Document yet — add them on the Edit screen before generating this packing list.</p>
+        <x-pdf.footer :company="$company" />
     @endforelse
 
 </body>

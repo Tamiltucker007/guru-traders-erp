@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Guru Traders Export ERP — Client Product Guide</title>
+<style>
+  @page { margin: 28mm 22mm 26mm 22mm; }
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.45;
+    color: #1a1a1a;
+    margin: 0;
+    padding: 0;
+  }
+  h1 { font-size: 22pt; margin: 0 0 6px; color: #0f2744; }
+  h2 {
+    font-size: 14pt;
+    color: #0f2744;
+    border-bottom: 2px solid #0f2744;
+    padding-bottom: 4px;
+    margin: 28px 0 12px;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 12pt;
+    color: #1e3a5f;
+    margin: 18px 0 6px;
+    page-break-after: avoid;
+  }
+  h4 { font-size: 11pt; margin: 12px 0 4px; color: #333; }
+  p { margin: 0 0 8px; }
+  ul, ol { margin: 0 0 10px; padding-left: 22px; }
+  li { margin-bottom: 3px; }
+  .cover {
+    text-align: center;
+    padding: 80px 20px 40px;
+    page-break-after: always;
+  }
+  .cover .brand { font-size: 28pt; font-weight: 700; color: #0f2744; letter-spacing: 0.5px; }
+  .cover .sub { font-size: 16pt; color: #3d5a80; margin-top: 8px; }
+  .cover .doc-title { font-size: 18pt; margin-top: 48px; font-weight: 600; }
+  .cover .meta { margin-top: 40px; color: #555; font-size: 10.5pt; }
+  .toc a { color: #0f2744; text-decoration: none; }
+  .toc li { margin-bottom: 6px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0 14px;
+    font-size: 10pt;
+  }
+  th, td {
+    border: 1px solid #c5ced9;
+    padding: 6px 8px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: #e8eef5; color: #0f2744; font-weight: 600; }
+  .note {
+    background: #f4f7fb;
+    border-left: 4px solid #3d5a80;
+    padding: 10px 12px;
+    margin: 12px 0;
+    font-size: 10.5pt;
+  }
+  .flow {
+    background: #fafbfc;
+    border: 1px solid #d8dee6;
+    padding: 12px 14px;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 9.5pt;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    margin: 10px 0 14px;
+  }
+  .footer-note { font-size: 9.5pt; color: #666; margin-top: 24px; }
+  .module-box { margin-bottom: 10px; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="brand">Guru Traders</div>
+  <div class="sub">Export ERP</div>
+  <div class="doc-title">Client Product Guide</div>
+  <p style="margin-top:16px;max-width:520px;margin-left:auto;margin-right:auto;color:#444;">
+    A complete overview of what the system is, what each module does,
+    how work flows from inquiry to shipment close, and which documents are generated.
+  </p>
+  <div class="meta">
+    Document for client reference &amp; demo handoff<br>
+    Version 1.0 &nbsp;|&nbsp; August 2026
+  </div>
+</div>
+
+<!-- TOC -->
+<h2>Table of Contents</h2>
+<ol class="toc">
+  <li><a href="#what">What is Guru Traders Export ERP?</a></li>
+  <li><a href="#who">Who uses it?</a></li>
+  <li><a href="#flow">End-to-end business flow</a></li>
+  <li><a href="#modules">Modules explained</a></li>
+  <li><a href="#docs">Documents &amp; PDFs generated</a></li>
+  <li><a href="#checklist">Export checklist (packing → eBRC)</a></li>
+  <li><a href="#roles">Roles &amp; access control</a></li>
+  <li><a href="#numbers">Numbering &amp; key concepts</a></li>
+  <li><a href="#demo">How to use this in a client demo</a></li>
+</ol>
+
+<!-- 1 -->
+<h2 id="what">1. What is Guru Traders Export ERP?</h2>
+<p>
+  <strong>Guru Traders Export ERP</strong> is a web-based business system built for an
+  <strong>export trading house</strong>. It connects the full chain of work in one place:
+</p>
+<ul>
+  <li>Master data (buyers, products, suppliers, pricing rules)</li>
+  <li>Sales (buyer inquiry → quotation → order confirmation)</li>
+  <li>Procurement (purchase orders → goods inward + QC)</li>
+  <li>Export documentation (packing, invoices, VGM, bank/buyer docs, uploads)</li>
+  <li>Finance trackers (bills, payments, receipts, commission)</li>
+  <li>Reports (outstanding payables / receivables)</li>
+  <li>Administration (users, roles, company letterhead)</li>
+</ul>
+<p>
+  The goal is simple: <strong>one job moves through the company with the same numbers,
+  same items, and the same documents</strong> — without retyping buyer/product data
+  on every desk.
+</p>
+<div class="note">
+  Company letterhead on PDFs (GSTIN, IEC, bank, logo, signatory) comes from
+  <strong>Administration → Company Profile</strong>.
+</div>
+
+<!-- 2 -->
+<h2 id="who">2. Who uses it?</h2>
+<table>
+  <tr><th>Desk / role</th><th>Main work in the system</th></tr>
+  <tr><td>Merchandising</td><td>Masters, Inquiries, Order Confirmations, raise POs</td></tr>
+  <tr><td>Procurement / Store</td><td>Purchase Orders, Goods Inward</td></tr>
+  <tr><td>Quality</td><td>QC on Goods Inward (approve / reject quantities)</td></tr>
+  <tr><td>Packing</td><td>Cartons on shipment, packing lists</td></tr>
+  <tr><td>Export documentation</td><td>Export Documents, generate PDFs, upload CHA/LEO/BL/Swift/eBRC</td></tr>
+  <tr><td>Accounts</td><td>Finance trackers, Outstanding, Buyer Receipts</td></tr>
+  <tr><td>Admin</td><td>Users, Roles, Company Profile</td></tr>
+</table>
+
+<!-- 3 -->
+<h2 id="flow">3. End-to-end business flow</h2>
+<div class="flow">Masters (Category → Order Format → Product → Buyer / Supplier / Agent → Markup)
+        │
+        ▼
+Inquiry  →  Quotation (PDF / Excel)  →  Convert to Order Confirmation
+        │
+        ▼
+Order Confirmation (Confirm)
+        ├──────────────────────► Raise Purchase Order(s)  [one PO per supplier]
+        │                                  │
+        │                                  ▼
+        │                          Goods Inward + QC Approve
+        │                                  │
+        │                                  ▼
+        │                          Finance trackers (supplier side)
+        │
+        └──────────────────────► Raise Export Document
+                                           │
+                                           ▼
+                                   Packing (cartons / weights)
+                                           │
+                                           ▼
+                                   Generate system PDFs
+                                           │
+                                           ▼
+                                   Upload / manual checklist
+                                           │
+                                           ▼
+                                   Upload eBRC  →  Shipment Closed
+                                           │
+                                           ▼
+                                   Buyer Receipts / Outstanding</div>
+<p>
+  You can also create an <strong>Order Confirmation as a Direct Buyer Contract</strong>
+  (skip full inquiry) when the buyer has already confirmed commercially.
+</p>
+
+<!-- 4 -->
+<h2 id="modules">4. Modules explained</h2>
+
+<h3>4.1 Dashboard</h3>
+<p>At-a-glance view of inquiries and order confirmations, with simple trends and status distribution.</p>
+
+<h3>4.2 Masters — the foundation</h3>
+<p>Nothing downstream (inquiry, OC, PO, export) works correctly until masters are set up.</p>
+
+<div class="module-box">
+<h4>Categories</h4>
+<p>Top-level product groups. Each category can offer the <strong>Order Formats</strong> that apply to it. Codes like <strong>CAT001</strong> are auto-generated.</p>
+</div>
+
+<div class="module-box">
+<h4>Order Formats</h4>
+<p>
+  Defines how the item table looks on Inquiry / OC / PO (columns, units, multi-colour,
+  default delivery &amp; packing text). This is why different product lines can have
+  different grids without changing the software.
+</p>
+</div>
+
+<div class="module-box">
+<h4>Products</h4>
+<p>
+  Sellable / exportable items under a category. Includes commercial name,
+  <strong>name on export document</strong>, units (PO vs export), HSN, GST %,
+  price band, fabric measures where needed, barcode, etc.
+</p>
+</div>
+
+<div class="module-box">
+<h4>Buyers</h4>
+<p>
+  Overseas (or domestic) customers. Stores company details, invoice name,
+  ports, agent &amp; commission, payment terms, incoterm, currency, bank/SWIFT,
+  and <strong>carton marking lines</strong> used on packing documents.
+</p>
+</div>
+
+<div class="module-box">
+<h4>Suppliers</h4>
+<p>Vendors from whom goods are purchased. Linked to categories, discount (used in markup costing), agent, bank and contact details.</p>
+</div>
+
+<div class="module-box">
+<h4>Jobbers</h4>
+<p>Same style of master as suppliers, kept as a separate desk for job-work parties.</p>
+</div>
+
+<div class="module-box">
+<h4>Agents</h4>
+<p>
+  Commission intermediaries on Buyer / Supplier / Jobber side. Stores commission %
+  and who pays (we / supplier / buyer).
+</p>
+</div>
+
+<div class="module-box">
+<h4>FOB Values</h4>
+<p>Simple named FOB value master used as a lookup in commercial work.</p>
+</div>
+
+<div class="module-box">
+<h4>Markup</h4>
+<p>
+  Buyer–supplier margin rules for costing. Conceptually:
+  client price from cost + markup %; our cost after supplier discount; profit is the difference.
+</p>
+</div>
+
+<h3>4.3 Sales</h3>
+
+<div class="module-box">
+<h4>Inquiries</h4>
+<p>
+  Buyer ask and internal price working against an Order Format. Status moves through
+  Draft → Price Working → Quote Sent → Confirmed → Converted to OC (or Lost).
+</p>
+<ul>
+  <li><strong>Quotation</strong> is not a separate menu — download PDF / Excel from the Inquiry.</li>
+  <li>Confirmed lines can be <strong>Converted to Order Confirmation</strong>.</li>
+</ul>
+</div>
+
+<div class="module-box">
+<h4>Order Confirmations (OC)</h4>
+<p>
+  Formal buyer agreement. After confirmation you can:
+</p>
+<ul>
+  <li><strong>Raise PO for Selected</strong> items (procurement)</li>
+  <li><strong>Raise Export Document for Selected</strong> items (shipment paperwork)</li>
+</ul>
+<p>Statuses: Draft → OC Sent → Confirmed.</p>
+</div>
+
+<h3>4.4 Procurement</h3>
+
+<div class="module-box">
+<h4>Purchase Orders</h4>
+<p>
+  One supplier’s slice of confirmed OC lines. Tracks Draft → Raised → Partial → Fully Received
+  (Fully Received is driven by goods inward).
+</p>
+</div>
+
+<div class="module-box">
+<h4>Goods Inward</h4>
+<p>
+  Receive against a PO and record QC on the same screen (ordered / received / passed / rejected).
+  There is <strong>no separate Quality menu</strong> — QC approve lives here.
+  Statuses: Pending Inspection → Approved (QC Passed) | Rejected.
+</p>
+</div>
+
+<h3>4.5 Export</h3>
+
+<div class="module-box">
+<h4>Packing</h4>
+<p>
+  Carton desk for shipments. Carton numbers, net/gross weights, dimensions and lines
+  are maintained on the Export Document; packing list PDFs are generated from there.
+</p>
+</div>
+
+<div class="module-box">
+<h4>Export Documents</h4>
+<p>
+  One outward consignment to one buyer. Holds logistics (ports, vessel/flight, forwarder,
+  marks, cartons, freight/insurance) and a <strong>full documentation checklist</strong>
+  from packing lists through eBRC.
+</p>
+<p>Statuses: Draft → In Progress → <strong>Closed</strong> (when eBRC is uploaded).</p>
+</div>
+
+<div class="module-box">
+<h4>Document OCR</h4>
+<p>
+  Optional AI assist: upload a scan/PDF (CHA checklist, LEO, BL final, Swift, eBRC, etc.)
+  and extract fields into the related checklist row (requires AI key configuration).
+</p>
+</div>
+
+<h3>4.6 Finance</h3>
+<p>
+  Finance screens are <strong>operational trackers</strong> tied to live PO / export data —
+  useful for accounts visibility during operations. They are not a full accounting ledger
+  (no complete voucher book yet).
+</p>
+<table>
+  <tr><th>Screen</th><th>What it is for</th></tr>
+  <tr><td>Purchase Bills</td><td>Links to generated / uploaded purchase-bill style docs for the shipment</td></tr>
+  <tr><td>Debit Notes</td><td>PO-linked adjustment visibility</td></tr>
+  <tr><td>Supplier Payments</td><td>Payables planning view by PO status</td></tr>
+  <tr><td>Buyer Receipts</td><td>Receivables view vs Payment Proof / eBRC status on export docs</td></tr>
+  <tr><td>Agent Commission</td><td>Commission preview from PO × agent rates</td></tr>
+</table>
+
+<h3>4.7 Reports</h3>
+<ul>
+  <li><strong>Outstanding</strong> — Supplier outstanding (from POs) and Buyer outstanding (from Export Documents)</li>
+  <li><strong>Reports hub</strong> — counts of POs, export documents, open/closed shipments</li>
+</ul>
+
+<h3>4.8 Administration</h3>
+<ul>
+  <li><strong>Company Profile</strong> — exporter identity printed on documents</li>
+  <li><strong>User Management</strong> — create users, activate/deactivate, assign roles</li>
+  <li><strong>Roles</strong> — named roles with permission matrix</li>
+  <li><strong>Permissions</strong> — registry sync for admins</li>
+</ul>
+
+<!-- 5 -->
+<h2 id="docs">5. Documents &amp; PDFs the system generates</h2>
+
+<h3>5.1 From Sales (Inquiry)</h3>
+<ul>
+  <li>Quotation PDF</li>
+  <li>Quotation Excel</li>
+</ul>
+
+<h3>5.2 From Export Document (system-generated)</h3>
+<table>
+  <tr><th>Group</th><th>Variants</th></tr>
+  <tr>
+    <td>Packing List</td>
+    <td>For Our Record (with Supplier); Without Supplier (for Carton); For Export Documentation</td>
+  </tr>
+  <tr>
+    <td>Item Summary</td>
+    <td>Raw Data (All Details); Split by Description &amp; Price Band; Supplier-wise Split</td>
+  </tr>
+  <tr>
+    <td>Export Invoice</td>
+    <td>For Customs; For Buyer; For Bank; For E-way Bill</td>
+  </tr>
+  <tr>
+    <td>Purchase Bills (E-Sanchit related)</td>
+    <td>By Carton No. &amp; Export Invoice / Balance Shipment; By Carton No., Item Description &amp; Supplier</td>
+  </tr>
+  <tr><td>Delivery Challan</td><td>Single PDF</td></tr>
+  <tr><td>VGM (Verified Gross Mass)</td><td>LCL Shipment; FCL Shipment</td></tr>
+  <tr><td>Bill of Lading (Draft)</td><td>Single PDF</td></tr>
+  <tr><td>E-Invoice</td><td>Content for portal (IRN/QR captured later on checklist)</td></tr>
+  <tr><td>Docs to Bank</td><td>GR Waiver; Bill of Exchange</td></tr>
+  <tr><td>Buyer Docs</td><td>GR Release Email; Bill of Exchange Intimation</td></tr>
+</table>
+<p>
+  In the application: open <strong>Export → Export Documents</strong> → open the document →
+  use <strong>Generate Documents</strong> → <strong>View</strong> each PDF.
+</p>
+
+<!-- 6 -->
+<h2 id="checklist">6. Export checklist (packing → eBRC)</h2>
+<p>
+  Beside generated PDFs, each Export Document tracks uploaded / manual steps
+  that happen with CHA, customs, shipping line and bank.
+</p>
+<table>
+  <tr><th>Item</th><th>Type</th><th>Notes</th></tr>
+  <tr><td>Checklist (from CHA)</td><td>Uploaded</td><td></td></tr>
+  <tr><td>E-Sanchit Documents</td><td>Uploaded</td><td></td></tr>
+  <tr><td>Examination</td><td>Manual</td><td></td></tr>
+  <tr><td>Assessed Copy</td><td>Uploaded</td><td></td></tr>
+  <tr><td>LEO Copy</td><td>Uploaded</td><td></td></tr>
+  <tr><td>Container &amp; Seal Numbers</td><td>Manual</td><td></td></tr>
+  <tr><td>Measurement Copy</td><td>Uploaded</td><td></td></tr>
+  <tr><td>CLP</td><td>Uploaded</td><td></td></tr>
+  <tr><td>Bill of Lading (Final)</td><td>Uploaded</td><td></td></tr>
+  <tr><td>Insurance Certificate</td><td>Uploaded</td><td></td></tr>
+  <tr><td>Goods Received by Client</td><td>Manual</td><td></td></tr>
+  <tr><td>Payment Received (Swift Copy)</td><td>Uploaded</td><td></td></tr>
+  <tr><td>Payment Proof to Bank (EEFC)</td><td>Uploaded</td><td></td></tr>
+  <tr><td>FIRC</td><td>Uploaded</td><td>Optional</td></tr>
+  <tr><td>Bank Certificate</td><td>Uploaded</td><td></td></tr>
+  <tr><td><strong>eBRC</strong></td><td>Uploaded</td><td><strong>Closes the Export Document / shipment</strong></td></tr>
+</table>
+
+<!-- 7 -->
+<h2 id="roles">7. Roles &amp; access control</h2>
+<p>
+  Access is permission-based. Sidebar sections only appear if the logged-in user
+  has at least one related permission.
+</p>
+<table>
+  <tr><th>Role (typical)</th><th>Scope</th></tr>
+  <tr><td>Super Admin</td><td>Everything</td></tr>
+  <tr><td>Admin</td><td>Full operations + users/roles/company (not permission sync)</td></tr>
+  <tr><td>Merchandising &amp; Manufacturing</td><td>Masters + Inquiry/OC/PO focus</td></tr>
+  <tr><td>Accounts</td><td>Finance + reports visibility</td></tr>
+  <tr><td>Export Documentation &amp; Foreign Payment</td><td>Packing, Export Documents, buyer receipts</td></tr>
+  <tr><td>Packing</td><td>Packing desk + related views</td></tr>
+  <tr><td>Quality Checker</td><td>Goods Inward QC approve</td></tr>
+  <tr><td>Jobworker</td><td>Limited PO / inward visibility</td></tr>
+</table>
+
+<!-- 8 -->
+<h2 id="numbers">8. Numbering &amp; key concepts</h2>
+<table>
+  <tr><th>Concept</th><th>What it means</th></tr>
+  <tr><td>Financial year</td><td>India style April–March (example: 2026-27)</td></tr>
+  <tr><td>Auto series</td><td>Examples: CAT001, BUY01, INQ/{FY}/nnn, GT/{Buyer}/{seq}/{FY} (OC), GT/PO/…, GT/INW/…, GT/EXP/…</td></tr>
+  <tr><td>Order Format</td><td>Shapes the item grid and print layout for that product line</td></tr>
+  <tr><td>Colour × size</td><td>Supported when the chosen format allows multiple colours</td></tr>
+  <tr><td>Markup</td><td>Structured margin between supplier cost and buyer price</td></tr>
+  <tr><td>QC on inward</td><td>Passed vs rejected qty recorded at receipt</td></tr>
+  <tr><td>Cartons</td><td>Entered on Export Document; drive packing lists / weights</td></tr>
+  <tr><td>eBRC</td><td>Final bank realisation proof — closes the file</td></tr>
+</table>
+
+<!-- 9 -->
+<h2 id="demo">9. How to use this in a client demo</h2>
+<ol>
+  <li>Show <strong>Masters</strong> briefly (Category → Format → Product → Buyer/Supplier).</li>
+  <li>Open an <strong>Inquiry</strong>, show quotation PDF/Excel.</li>
+  <li>Open <strong>Order Confirmation</strong> → Raise PO + Raise Export Document.</li>
+  <li>Show <strong>Goods Inward</strong> with QC approve.</li>
+  <li>Open <strong>Export Document</strong> → cartons → Generate Documents → View PDFs.</li>
+  <li>Walk the checklist (what is system-generated vs uploaded).</li>
+  <li>Open <strong>Finance</strong> and <strong>Outstanding</strong> for accounts visibility.</li>
+  <li>Mention <strong>roles</strong>: different desks see only their work.</li>
+</ol>
+<div class="note">
+  Sample system-generated PDFs for demo shipments can be shared from the
+  <strong>Guru-Traders-Demo-PDFs</strong> folder (EXP-001 and EXP-002), or viewed live
+  inside Export Documents.
+</div>
+
+<p class="footer-note">
+  This guide describes the product as delivered for client demonstration.
+  Finance screens are trackers linked to operational data; full ledger accounting
+  can be extended as a later phase if required.
+  <br><br>
+  © Guru Traders — Export ERP Client Product Guide (v1.0)
+</p>
+
+</body>
+</html>

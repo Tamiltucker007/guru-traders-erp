@@ -21,6 +21,8 @@
 </head>
 <body>
 
+    <x-pdf.letterhead :company="$company" title="Buyer Documents" :subtitle="$variantTitle.' — '.$document->doc_num" />
+
     @if($variant === 'gr-release-email')
         <p class="title">SHIPMENT DOCUMENTS — FOR BUYER</p>
         <p class="subtitle">GR Release — {{ $document->doc_num }}</p>
@@ -135,9 +137,7 @@
         </tr>
     </table>
 
-    <div class="small center" style="margin-top:6px; color:#555;">
-        This is a computer generated document — {{ $company->company_name }}
-    </div>
+    <x-pdf.footer :company="$company" />
 
 </body>
 </html>

@@ -136,6 +136,9 @@ class ExportDocumentService
      *     reference_no?: ?string,
      *     amount?: ?float,
      *     remarks?: ?string,
+     *     matched_buyer_id?: ?int,
+     *     matched_supplier_id?: ?int,
+     *     matched_order_confirmation_id?: ?int,
      *     insurance_action?: ?string,
      *     bl_number?: ?string,
      *     bl_date?: ?string
@@ -216,6 +219,18 @@ class ExportDocumentService
             }
             if (array_key_exists('remarks', $data)) {
                 $entry->remarks = $data['remarks'];
+            }
+            if (array_key_exists('matched_buyer_id', $data)) {
+                $entry->matched_buyer_id = $data['matched_buyer_id'] ?: null;
+            }
+            if (array_key_exists('matched_supplier_id', $data)) {
+                $entry->matched_supplier_id = $data['matched_supplier_id'] ?: null;
+            }
+            if (array_key_exists('matched_order_confirmation_id', $data)) {
+                $entry->matched_order_confirmation_id = $data['matched_order_confirmation_id'] ?: null;
+            }
+            if (array_key_exists('ocr_verification', $data)) {
+                $entry->ocr_verification = $data['ocr_verification'];
             }
 
             $entry->save();
@@ -316,13 +331,16 @@ class ExportDocumentService
         }
 
         $entry->update([
-            'status'        => 'pending',
-            'file_path'     => null,
-            'original_name' => null,
-            'uploaded_at'   => null,
-            'generated_at'  => null,
-            'reference_no'  => null,
-            'remarks'       => null,
+            'status'               => 'pending',
+            'file_path'            => null,
+            'original_name'        => null,
+            'uploaded_at'          => null,
+            'generated_at'         => null,
+            'reference_no'         => null,
+            'remarks'              => null,
+            'matched_buyer_id'     => null,
+            'matched_supplier_id'  => null,
+            'matched_order_confirmation_id' => null,
         ]);
 
         if ($entry->exportDocument->status === 'closed') {

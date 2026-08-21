@@ -22,11 +22,7 @@
 </head>
 <body>
 
-    @if($company->logo_path && file_exists(public_path('storage/'.$company->logo_path)))
-        <div style="text-align:center; margin-bottom:6px;">
-            <img src="{{ public_path('storage/'.$company->logo_path) }}" style="max-height:50px;">
-        </div>
-    @endif
+    <x-pdf.letterhead :company="$company" title="Export Invoice" :subtitle="$variantTitle" />
 
     <p class="title">EXPORT INVOICE</p>
     <p class="subtitle">{{ $variantTitle }}</p>
@@ -191,6 +187,8 @@
     </table>
 
     <div class="small center" style="margin-top:6px">This is a Computer Generated Export Invoice</div>
+
+    <x-pdf.footer :company="$company" note="Official export invoice issued by Guru Traders." />
 
 </body>
 </html>

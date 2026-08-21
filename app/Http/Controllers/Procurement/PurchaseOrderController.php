@@ -8,6 +8,7 @@ use App\Http\Requests\Procurement\UpdatePurchaseOrderRequest;
 use App\Models\OrderConfirmation;
 use App\Models\PurchaseOrder;
 use App\Models\Supplier;
+use App\Services\Export\OcrOrderContextBuilder;
 use App\Services\Procurement\PurchaseOrderService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,8 +18,10 @@ use Illuminate\View\View;
 
 class PurchaseOrderController extends Controller implements HasMiddleware
 {
-    public function __construct(private readonly PurchaseOrderService $purchaseOrders)
-    {
+    public function __construct(
+        private readonly PurchaseOrderService $purchaseOrders,
+        private readonly OcrOrderContextBuilder $orderContext,
+    ) {
     }
 
     /**
@@ -72,13 +75,22 @@ class PurchaseOrderController extends Controller implements HasMiddleware
 
     public function show(PurchaseOrder $purchaseOrder): View
     {
+        $purchaseOrder->load([
+            'orderConfirmation.buyer', 'orderConfirmation.category', 'supplier.agent',
+            'items' => fn ($q) => $q->with(['product', 'colours.sizes', 'sourceItem']),
+            'timelineEntries',
+            'creator', 'updater',
+        ]);
+
+        $orderContext = ['available' => false];
+        if ($purchaseOrder->orderConfirmation) {
+            $orderContext = $this->orderContext->buildFromOrderConfirmation($purchaseOrder->orderConfirmation);
+            $orderContext['module'] = 'purchase_order';
+        }
+
         return view('procurement.purchase-orders.show', [
-            'purchaseOrder' => $purchaseOrder->load([
-                'orderConfirmation.buyer', 'orderConfirmation.category', 'supplier.agent',
-                'items' => fn ($q) => $q->with(['product', 'colours.sizes', 'sourceItem']),
-                'timelineEntries',
-                'creator', 'updater',
-            ]),
+            'purchaseOrder' => $purchaseOrder,
+            'orderContext'  => $orderContext,
         ]);
     }
 
