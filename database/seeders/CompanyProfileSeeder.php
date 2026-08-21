@@ -24,12 +24,25 @@ class CompanyProfileSeeder extends Seeder
             return;
         }
 
+        $logoPath = null;
+        $bundledLogo = public_path('images/gt-logo.png');
+        if (is_file($bundledLogo)) {
+            $relative = 'company-profile/gt-logo.png';
+            $dest = storage_path('app/public/'.$relative);
+            if (! is_dir(dirname($dest))) {
+                mkdir(dirname($dest), 0775, true);
+            }
+            copy($bundledLogo, $dest);
+            $logoPath = $relative;
+        }
+
         CompanyProfile::create([
             'company_name' => 'Guru Traders',
             'tagline'      => 'An Indian Govt. Recognised Export House — Exporters of Readymade Garments, Textiles & Sundry Items',
             'address'      => "Shree Hanuman Industrial Estate, Unit No. 210/211, 2nd Floor,\nG. D. Ambekar Marg, Wadala,\nMumbai 400 031, India.",
             'phone'        => '24131047 / 24149628 / 24156076',
             'email'        => 'chetan@gurutradersindia.com',
+            'logo_path'    => $logoPath,
         ]);
 
         $this->command?->info('Company profile seeded from letterhead.');

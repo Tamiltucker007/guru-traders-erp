@@ -18,6 +18,8 @@
 </head>
 <body>
 
+    <x-pdf.letterhead :company="$company" title="Bill of Lading" subtitle="Draft — for shipping line confirmation" />
+
     <table class="frame" style="margin-bottom:10px">
         <tr>
             <td style="width:58%; padding:0; vertical-align:top;">
@@ -169,9 +171,7 @@ FREIGHT {{ $document->freight_terms ?: 'PREPAID' }}
         </tr>
     </table>
 
-    <div style="margin-top:6px; font-size:9px; color:#555;">
-        This is a computer generated draft — Guru Traders. To be confirmed with the shipping line before the final B/L is cut.
-    </div>
+    <x-pdf.footer :company="$company" note="Computer generated draft — confirm with the shipping line before the final B/L is cut." />
 
 </body>
 </html>

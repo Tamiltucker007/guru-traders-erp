@@ -25,6 +25,7 @@
             <a href="{{ route('sales.inquiries.index') }}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
+            <x-order-context-modal :order-context="$orderContext ?? ['available' => false]" modal-id="inquiryOrderContextModal" />
         </x-slot>
 
         <dl class="row mb-4">

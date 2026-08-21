@@ -11,6 +11,7 @@
             <a href="{{ route('export.documents.index') }}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
+            <x-order-context-modal :order-context="$orderContext ?? ['available' => false]" modal-id="exportOrderContextModal" />
         </x-slot>
 
         {{-- Always-visible status strip — the handful of facts worth seeing without clicking a tab. --}}
@@ -397,6 +398,19 @@
                                                 </a><br>
                                             @endif
                                             {{ $entry->reference_no ?: ($entry->hasFile() ? '' : '—') }}
+                                            @if($entry->matchedBuyer || $entry->matchedSupplier || $entry->matchedOrderConfirmation)
+                                                <div class="mt-1 text-body-secondary">
+                                                    @if($entry->matchedBuyer)
+                                                        <div><i class="bi bi-person-badge me-1"></i>Buyer: {{ $entry->matchedBuyer->display_code }} — {{ $entry->matchedBuyer->company_name }}</div>
+                                                    @endif
+                                                    @if($entry->matchedSupplier)
+                                                        <div><i class="bi bi-truck me-1"></i>Supplier: {{ $entry->matchedSupplier->display_code }} — {{ $entry->matchedSupplier->company_name }}</div>
+                                                    @endif
+                                                    @if($entry->matchedOrderConfirmation)
+                                                        <div><i class="bi bi-journal-check me-1"></i>OC: {{ $entry->matchedOrderConfirmation->oc_num }}</div>
+                                                    @endif
+                                                </div>
+                                            @endif
                                         </td>
                                         <td class="small">{{ ($entry->uploaded_at ?? $entry->generated_at)?->format('d M Y') ?? '—' }}</td>
                                         @if($canEdit)
@@ -431,6 +445,12 @@
                                                             @csrf
                                                             <input type="hidden" name="insurance_action" value="upload_certificate">
                                                             <input type="hidden" name="mark_done" value="1">
+                                                            <input type="hidden" name="matched_buyer_id" class="js-matched-buyer-id"
+                                                                   value="{{ $entry->matched_buyer_id }}">
+                                                            <input type="hidden" name="matched_supplier_id" class="js-matched-supplier-id"
+                                                                   value="{{ $entry->matched_supplier_id }}">
+                                                            <input type="hidden" name="matched_order_confirmation_id" class="js-matched-oc-id"
+                                                                   value="{{ $entry->matched_order_confirmation_id }}">
 
                                                             <div class="col-md-4">
                                                                 <label class="form-label small mb-0">Certificate file <span class="text-danger">*</span></label>
@@ -473,6 +493,7 @@
                                                                 @endif
                                                             </div>
                                                             <div class="col-12 small text-body-secondary js-ocr-status d-none"></div>
+                                                            <div class="col-12 small js-ocr-parties d-none"></div>
                                                         </form>
                                                     @else
                                                     <form action="{{ route('export.documents.checklist.update', [$document, $entry]) }}"
@@ -483,6 +504,12 @@
                                                           data-ocr-supported="{{ in_array($entry->type->code, $ocrTypes, true) ? '1' : '0' }}">
                                                         @csrf
                                                         <input type="hidden" name="mark_done" value="1">
+                                                        <input type="hidden" name="matched_buyer_id" class="js-matched-buyer-id"
+                                                               value="{{ $entry->matched_buyer_id }}">
+                                                        <input type="hidden" name="matched_supplier_id" class="js-matched-supplier-id"
+                                                               value="{{ $entry->matched_supplier_id }}">
+                                                        <input type="hidden" name="matched_order_confirmation_id" class="js-matched-oc-id"
+                                                               value="{{ $entry->matched_order_confirmation_id }}">
 
                                                         @if($entry->type->requiresFile())
                                                             <div class="col-md-3">
@@ -513,6 +540,7 @@
                                                             @endif
                                                         </div>
                                                         <div class="col-12 small text-body-secondary js-ocr-status d-none"></div>
+                                                        <div class="col-12 small js-ocr-parties d-none"></div>
                                                     </form>
                                                     @endif
 
@@ -683,6 +711,10 @@
             const refInput = form.querySelector('.js-ocr-reference');
             const remarksInput = form.querySelector('.js-ocr-remarks');
             const statusEl = form.querySelector('.js-ocr-status');
+            const partiesEl = form.querySelector('.js-ocr-parties');
+            const buyerIdInput = form.querySelector('.js-matched-buyer-id');
+            const supplierIdInput = form.querySelector('.js-matched-supplier-id');
+            const ocIdInput = form.querySelector('.js-matched-oc-id');
 
             btn.addEventListener('click', async function () {
                 if (! fileInput || ! fileInput.files.length) {
@@ -753,9 +785,57 @@
                         if (blDate) blDateInput.value = blDate;
                     }
 
+                    const parties = data.parties || null;
+                    if (buyerIdInput) buyerIdInput.value = parties?.buyer?.id || '';
+                    if (supplierIdInput) supplierIdInput.value = parties?.supplier?.id || '';
+                    if (ocIdInput) ocIdInput.value = parties?.order_confirmation?.id || '';
+                    if (partiesEl) {
+                        const bits = [];
+                        if (parties?.buyer) {
+                            bits.push('Buyer: ' + (parties.buyer.display_code || '') + ' — ' + parties.buyer.company_name);
+                        } else if (parties?.buyer_name) {
+                            bits.push('Buyer text: ' + parties.buyer_name + ' (no master match)');
+                        }
+                        if (parties?.supplier) {
+                            bits.push('Supplier: ' + (parties.supplier.display_code || '') + ' — ' + parties.supplier.company_name);
+                        } else if (parties?.supplier_name) {
+                            bits.push('Supplier text: ' + parties.supplier_name + ' (no master match)');
+                        }
+                        if (parties?.order_confirmation) {
+                            bits.push('OC: ' + parties.order_confirmation.oc_num
+                                + (parties.order_confirmation.buyer_ref ? (' (' + parties.order_confirmation.buyer_ref + ')') : ''));
+                        } else if (parties?.invoice_no) {
+                            bits.push('Invoice ' + parties.invoice_no + ' (no OC match)');
+                        }
+                        if (data.order_context && data.order_context.summary) {
+                            bits.push(data.order_context.summary);
+                        }
+                        if (data.order_context && data.order_context.payment) {
+                            const pending = data.order_context.payment.pending_labels || [];
+                            if (data.order_context.payment.realised) {
+                                bits.push('Payment realised');
+                            } else if (pending.length) {
+                                bits.push('Payment pending: ' + pending.join(', '));
+                            }
+                        }
+                        if (parties?.selected_buyer_matches === false) {
+                            bits.push('Warning: scanned buyer differs from this Export Document buyer.');
+                        } else if (parties?.selected_buyer_matches === true) {
+                            bits.push('Export Document buyer matches the scan.');
+                        }
+                        if (parties?.selected_oc_matches === false) {
+                            bits.push('Warning: matched OC differs from this shipment OC.');
+                        } else if (parties?.selected_oc_matches === true) {
+                            bits.push('Order Confirmation matches this shipment.');
+                        }
+                        partiesEl.classList.toggle('d-none', bits.length === 0);
+                        partiesEl.className = 'col-12 small ' + ((parties?.selected_buyer_matches === false || parties?.selected_oc_matches === false) ? 'text-warning' : 'text-success');
+                        partiesEl.textContent = bits.join(' · ');
+                    }
+
                     statusEl.classList.remove('text-body-secondary', 'text-danger');
                     statusEl.classList.add('text-success');
-                    statusEl.textContent = 'Fields filled — review them, then click Save.';
+                    statusEl.textContent = 'Fields filled + parties matched — review them, then click Save.';
                 } catch (err) {
                     statusEl.classList.remove('text-body-secondary', 'text-success');
                     statusEl.classList.add('text-danger');

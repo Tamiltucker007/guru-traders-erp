@@ -9,6 +9,9 @@ use App\Models\ExportDocument;
 use App\Models\ExportDocumentChecklist;
 use App\Services\Export\ExportDocumentService;
 use App\Services\Export\GeminiDocumentExtractor;
+use App\Services\Export\OcrFieldVerifier;
+use App\Services\Export\OcrOrderContextBuilder;
+use App\Services\Export\OcrPartyMatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +30,9 @@ class ExportDocumentOcrController extends Controller implements HasMiddleware
     public function __construct(
         private readonly GeminiDocumentExtractor $ocr,
         private readonly ExportDocumentService $documents,
+        private readonly OcrPartyMatcher $parties,
+        private readonly OcrOrderContextBuilder $orderContext,
+        private readonly OcrFieldVerifier $verifier,
     ) {
     }
 
@@ -64,6 +70,11 @@ class ExportDocumentOcrController extends Controller implements HasMiddleware
             $type = DocumentChecklistType::query()->where('code', $typeCode)->first();
             if ($type) {
                 $checklist = ExportDocumentChecklist::query()
+                    ->with([
+                        'matchedBuyer:id,display_code,company_name',
+                        'matchedSupplier:id,display_code,company_name',
+                        'matchedOrderConfirmation:id,oc_num,buyer_ref',
+                    ])
                     ->where('export_document_id', $selected->id)
                     ->where('document_checklist_type_id', $type->id)
                     ->first();
@@ -78,6 +89,7 @@ class ExportDocumentOcrController extends Controller implements HasMiddleware
             'checklist'      => $checklist,
             'ocrConfigured'  => $this->ocr->isConfigured(),
             'upcomingTypes'  => [],
+            'orderContext'   => $this->orderContext->build($selected),
         ]);
     }
 
@@ -107,7 +119,32 @@ class ExportDocumentOcrController extends Controller implements HasMiddleware
             return response()->json(['message' => 'OCR failed unexpectedly. Try again or enter fields manually.'], 500);
         }
 
-        return response()->json($result);
+        $selected = null;
+        if ($request->filled('export_document_id')) {
+            $selected = ExportDocument::query()->find($request->integer('export_document_id'));
+        }
+
+        $parties = $this->parties->resolve(
+            $result['buyer_name'] ?? null,
+            $result['supplier_name'] ?? null,
+            $selected,
+            is_scalar($result['fields']['invoice_no'] ?? null)
+                ? trim((string) $result['fields']['invoice_no'])
+                : null,
+        );
+
+        // Prefer the suggested shipment when OCR matched a different ED for this order.
+        $contextDoc = $selected;
+        $suggestedId = $parties['suggested_export_documents'][0]['id'] ?? null;
+        if ($suggestedId && (! $selected || (int) $selected->id !== (int) $suggestedId)) {
+            $contextDoc = ExportDocument::query()->find($suggestedId) ?? $selected;
+        }
+
+        return response()->json($result + [
+            'parties'        => $parties,
+            'order_context'  => $this->orderContext->build($contextDoc, $parties),
+            'verification'   => $this->verifier->compare($contextDoc, $result),
+        ]);
     }
 
     /**
@@ -116,14 +153,18 @@ class ExportDocumentOcrController extends Controller implements HasMiddleware
     public function store(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'export_document_id' => ['required', 'integer', 'exists:export_documents,id'],
-            'type_code'          => ['required', 'string', 'in:'.implode(',', GeminiDocumentExtractor::PHASE1_TYPES)],
-            'file'               => ['required', 'file', 'max:10240', 'mimes:jpg,jpeg,png,webp,gif,pdf'],
-            'reference_no'       => ['nullable', 'string', 'max:120'],
-            'remarks'            => ['nullable', 'string', 'max:1000'],
-            'insurance_action'   => ['nullable', 'in:upload_certificate'],
-            'bl_number'          => ['nullable', 'string', 'max:120'],
-            'bl_date'            => ['nullable', 'date'],
+            'export_document_id'   => ['required', 'integer', 'exists:export_documents,id'],
+            'type_code'            => ['required', 'string', 'in:'.implode(',', GeminiDocumentExtractor::PHASE1_TYPES)],
+            'file'                 => ['required', 'file', 'max:10240', 'mimes:jpg,jpeg,png,webp,gif,pdf'],
+            'reference_no'         => ['nullable', 'string', 'max:120'],
+            'remarks'              => ['nullable', 'string', 'max:1000'],
+            'matched_buyer_id'     => ['nullable', 'integer', 'exists:buyers,id'],
+            'matched_supplier_id'  => ['nullable', 'integer', 'exists:suppliers,id'],
+            'matched_order_confirmation_id' => ['nullable', 'integer', 'exists:order_confirmations,id'],
+            'ocr_verification_json' => ['nullable', 'string'],
+            'insurance_action'     => ['nullable', 'in:upload_certificate'],
+            'bl_number'            => ['nullable', 'string', 'max:120'],
+            'bl_date'              => ['nullable', 'date'],
         ]);
 
         if ($data['type_code'] === 'insurance') {
@@ -153,14 +194,26 @@ class ExportDocumentOcrController extends Controller implements HasMiddleware
         }
 
         try {
+            $verification = null;
+            if (! empty($data['ocr_verification_json'])) {
+                $decoded = json_decode($data['ocr_verification_json'], true);
+                if (is_array($decoded)) {
+                    $verification = $decoded;
+                }
+            }
+
             $this->documents->recordChecklist($checklist, [
-                'file'              => $request->file('file'),
-                'mark_done'         => true,
-                'reference_no'      => $data['reference_no'] ?? null,
-                'remarks'           => $data['remarks'] ?? null,
-                'insurance_action'  => $data['insurance_action'] ?? null,
-                'bl_number'         => $data['bl_number'] ?? null,
-                'bl_date'           => $data['bl_date'] ?? null,
+                'file'                 => $request->file('file'),
+                'mark_done'            => true,
+                'reference_no'         => $data['reference_no'] ?? null,
+                'remarks'              => $data['remarks'] ?? null,
+                'matched_buyer_id'     => $data['matched_buyer_id'] ?? null,
+                'matched_supplier_id'  => $data['matched_supplier_id'] ?? null,
+                'matched_order_confirmation_id' => $data['matched_order_confirmation_id'] ?? null,
+                'ocr_verification'     => $verification,
+                'insurance_action'     => $data['insurance_action'] ?? null,
+                'bl_number'            => $data['bl_number'] ?? null,
+                'bl_date'              => $data['bl_date'] ?? null,
             ]);
         } catch (RuntimeException $e) {
             return back()->withInput()->with('error', $e->getMessage());

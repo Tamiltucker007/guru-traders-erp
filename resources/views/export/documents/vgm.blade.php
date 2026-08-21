@@ -21,6 +21,8 @@
 </head>
 <body>
 
+    <x-pdf.letterhead :company="$company" title="VGM Declaration" :subtitle="$variantTitle.' — SOLAS Regulation VI/2'" />
+
     <p class="title">VERIFIED GROSS MASS (VGM) DECLARATION</p>
     <p class="subtitle">{{ $variantTitle }} — SOLAS Regulation VI/2</p>
 
@@ -137,9 +139,7 @@
         </tr>
     </table>
 
-    <div class="small center" style="margin-top:6px; color:#555;">
-        This is a computer generated VGM declaration — {{ $company->company_name }}
-    </div>
+    <x-pdf.footer :company="$company" note="Computer generated VGM declaration." />
 
 </body>
 </html>

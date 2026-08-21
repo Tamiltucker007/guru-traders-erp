@@ -7,8 +7,18 @@
                     <i class="bi bi-list"></i>
                 </a>
             </li>
-            <li class="nav-item d-none d-md-block">
-                <a href="{{ route('dashboard') }}" class="nav-link">Dashboard</a>
+            {{-- Current page title, not a link home. A permanent "Dashboard"
+                 link here sent people back to the landing screen whenever they
+                 clicked the top bar while already on another page. --}}
+            <li class="nav-item d-none d-md-flex align-items-center">
+                @unless (request()->routeIs('dashboard'))
+                    <a href="{{ route('dashboard') }}" class="nav-link py-0 text-secondary" title="Dashboard">
+                        <i class="bi bi-house-door"></i>
+                        <span class="visually-hidden">Dashboard</span>
+                    </a>
+                    <span class="text-secondary mx-1" aria-hidden="true">/</span>
+                @endunless
+                <span class="nav-link disabled px-1">{{ $header ?? 'Dashboard' }}</span>
             </li>
         </ul>
         <!-- End navbar links -->

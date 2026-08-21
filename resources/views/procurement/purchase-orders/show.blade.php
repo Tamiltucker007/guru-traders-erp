@@ -11,6 +11,7 @@
             <a href="{{ route('procurement.purchase-orders.index') }}" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Back
             </a>
+            <x-order-context-modal :order-context="$orderContext ?? ['available' => false]" modal-id="poOrderContextModal" />
         </x-slot>
 
         <div class="alert alert-info py-2 small mb-3">

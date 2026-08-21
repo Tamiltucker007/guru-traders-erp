@@ -18,6 +18,7 @@ use App\Models\Supplier;
 use App\Exports\InquiryExport;
 use App\Services\NumberSeriesService;
 use App\Services\Sales\InquiryService;
+use App\Services\Export\OcrOrderContextBuilder;
 use App\Support\FinancialYear;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
@@ -34,6 +35,7 @@ class InquiryController extends Controller implements HasMiddleware
     public function __construct(
         private readonly InquiryService $inquiries,
         private readonly NumberSeriesService $numbers,
+        private readonly OcrOrderContextBuilder $orderContext,
     ) {
     }
 
@@ -115,13 +117,16 @@ class InquiryController extends Controller implements HasMiddleware
 
     public function show(Inquiry $inquiry): View
     {
+        $inquiry->load([
+            'buyer', 'category', 'format', 'agent', 'currency', 'source',
+            'items' => fn ($q) => $q->with(['product', 'supplier', 'fobValue', 'colours.sizes', 'bomLines']),
+            'followUps.creator',
+            'creator', 'updater',
+        ]);
+
         return view('sales.inquiries.show', [
-            'inquiry' => $inquiry->load([
-                'buyer', 'category', 'format', 'agent', 'currency', 'source',
-                'items' => fn ($q) => $q->with(['product', 'supplier', 'fobValue', 'colours.sizes', 'bomLines']),
-                'followUps.creator',
-                'creator', 'updater',
-            ]),
+            'inquiry' => $inquiry,
+            'orderContext' => $this->orderContext->buildFromInquiry($inquiry),
         ]);
     }
 

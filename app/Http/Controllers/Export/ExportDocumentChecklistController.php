@@ -8,6 +8,9 @@ use App\Models\ExportDocument;
 use App\Models\ExportDocumentChecklist;
 use App\Services\Export\ExportDocumentService;
 use App\Services\Export\GeminiDocumentExtractor;
+use App\Services\Export\OcrFieldVerifier;
+use App\Services\Export\OcrOrderContextBuilder;
+use App\Services\Export\OcrPartyMatcher;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -29,6 +32,9 @@ class ExportDocumentChecklistController extends Controller implements HasMiddlew
     public function __construct(
         private readonly ExportDocumentService $documents,
         private readonly GeminiDocumentExtractor $ocr,
+        private readonly OcrPartyMatcher $parties,
+        private readonly OcrOrderContextBuilder $orderContext,
+        private readonly OcrFieldVerifier $verifier,
     ) {
     }
 
@@ -51,14 +57,17 @@ class ExportDocumentChecklistController extends Controller implements HasMiddlew
         $isInsurance = $checklist->type?->code === 'insurance';
 
         $rules = [
-            'file'              => ['nullable', 'file', 'max:10240'],
-            'mark_done'         => ['nullable', 'boolean'],
-            'reference_no'      => ['nullable', 'string', 'max:120'],
-            'amount'            => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
-            'remarks'           => ['nullable', 'string', 'max:1000'],
-            'insurance_action'  => ['nullable', 'in:cancel_draft,upload_certificate'],
-            'bl_number'         => ['nullable', 'string', 'max:120'],
-            'bl_date'           => ['nullable', 'date'],
+            'file'                 => ['nullable', 'file', 'max:10240'],
+            'mark_done'            => ['nullable', 'boolean'],
+            'reference_no'         => ['nullable', 'string', 'max:120'],
+            'amount'               => ['nullable', 'numeric', 'min:0', 'max:9999999999.99'],
+            'remarks'              => ['nullable', 'string', 'max:1000'],
+            'matched_buyer_id'     => ['nullable', 'integer', 'exists:buyers,id'],
+            'matched_supplier_id'  => ['nullable', 'integer', 'exists:suppliers,id'],
+            'matched_order_confirmation_id' => ['nullable', 'integer', 'exists:order_confirmations,id'],
+            'insurance_action'     => ['nullable', 'in:cancel_draft,upload_certificate'],
+            'bl_number'            => ['nullable', 'string', 'max:120'],
+            'bl_date'              => ['nullable', 'date'],
         ];
 
         if ($isInsurance && $request->string('insurance_action')->toString() === 'upload_certificate') {
@@ -141,10 +150,24 @@ class ExportDocumentChecklistController extends Controller implements HasMiddlew
             return response()->json(['message' => 'OCR failed unexpectedly. Try again or enter fields manually.'], 500);
         }
 
+        $parties = $this->parties->resolve(
+            $result['buyer_name'] ?? null,
+            $result['supplier_name'] ?? null,
+            $document,
+            is_scalar($result['fields']['invoice_no'] ?? null)
+                ? trim((string) $result['fields']['invoice_no'])
+                : null,
+        );
+
         return response()->json([
-            'reference_no' => $result['reference_no'],
-            'remarks'      => $result['remarks'],
-            'fields'       => $result['fields'],
+            'reference_no'  => $result['reference_no'],
+            'remarks'       => $result['remarks'],
+            'buyer_name'    => $result['buyer_name'] ?? null,
+            'supplier_name' => $result['supplier_name'] ?? null,
+            'fields'        => $result['fields'],
+            'parties'       => $parties,
+            'order_context' => $this->orderContext->build($document, $parties),
+            'verification'  => $this->verifier->compare($document, $result),
         ]);
     }
 }

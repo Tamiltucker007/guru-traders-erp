@@ -91,7 +91,13 @@ class GeminiDocumentExtractor
     }
 
     /**
-     * @return array{reference_no: ?string, remarks: ?string, fields: array<string, mixed>}
+     * @return array{
+     *     reference_no: ?string,
+     *     remarks: ?string,
+     *     buyer_name: ?string,
+     *     supplier_name: ?string,
+     *     fields: array<string, mixed>
+     * }
      */
     public function extract(UploadedFile $file, string $typeCode): array
     {
@@ -165,110 +171,154 @@ class GeminiDocumentExtractor
         return match ($typeCode) {
             // Sheet #4 — CHA checklist after docs are filed on the customs site.
             'cha_checklist' => [
-                'checklist_no'       => 'CHA checklist / job / reference number',
-                'checklist_date'     => 'Checklist or filing date as YYYY-MM-DD',
-                'shipping_bill_no'   => 'Shipping bill number if printed',
-                'invoice_no'         => 'Export invoice number if printed',
-                'cha_name'           => 'Clearing house agent / CHA name if printed',
-                'status_or_remarks'  => 'Any status line or short note on the checklist',
+                'checklist_no'              => 'CHA checklist / job / reference number',
+                'checklist_date'            => 'Checklist or filing date as YYYY-MM-DD',
+                'shipping_bill_no'          => 'Shipping bill number if printed',
+                'invoice_no'                => 'Export invoice number if printed',
+                'cha_name'                  => 'Clearing house agent / CHA name if printed',
+                'buyer_or_consignee_name'   => 'Overseas buyer / consignee / notify party name if printed',
+                'buyer_address'             => 'Buyer / consignee address if printed',
+                'supplier_or_shipper_name'  => 'Supplier / manufacturer / shipper name if printed (not CHA, not the Indian exporter)',
+                'currency'                  => 'Currency code if printed (e.g. USD, AED, INR)',
+                'total_amount'              => 'Invoice / shipment total amount as a number if printed',
+                'quantity'                  => 'Total quantity / pieces if printed',
+                'unit_price'                => 'Unit price if printed',
+                'hs_code'                   => 'HS / HSN code if printed',
+                'status_or_remarks'         => 'Any status line or short note on the checklist',
             ],
             // Sheet #5 — signed letterhead pack filed on ICEGATE e-Sanchit.
             'e_sanchit_docs' => [
-                'ack_or_ref_no'      => 'E-Sanchit acknowledgement / IRN / upload reference if printed',
-                'document_date'      => 'Document or upload date as YYYY-MM-DD',
-                'invoice_no'         => 'Export invoice number if printed',
-                'packing_list_ref'   => 'Packing list number or reference if printed',
-                'shipping_bill_no'   => 'Shipping bill number if printed',
-                'exporter_name'      => 'Exporter / shipper name if printed',
-                'status_or_remarks'  => 'Any status line or short note on the document',
+                'ack_or_ref_no'             => 'E-Sanchit acknowledgement / IRN / upload reference if printed',
+                'document_date'             => 'Document or upload date as YYYY-MM-DD',
+                'invoice_no'                => 'Export invoice number if printed',
+                'packing_list_ref'          => 'Packing list number or reference if printed',
+                'shipping_bill_no'          => 'Shipping bill number if printed',
+                'exporter_name'             => 'Exporter / shipper name if printed',
+                'buyer_or_consignee_name'   => 'Overseas buyer / consignee / notify party name if printed',
+                'buyer_address'             => 'Buyer / consignee address if printed',
+                'supplier_or_shipper_name'  => 'Supplier / manufacturer name if printed (not the Indian exporter)',
+                'currency'                  => 'Currency code if printed (e.g. USD, AED, INR)',
+                'total_amount'              => 'Invoice total amount as a number if printed',
+                'quantity'                  => 'Total quantity / pieces if printed',
+                'unit_price'                => 'Unit price if printed',
+                'hs_code'                   => 'HS / HSN code if printed',
+                'status_or_remarks'         => 'Any status line or short note on the document',
             ],
             'leo_copy' => [
-                'leo_number'         => 'LEO / Let Export Order number (e.g. 15/274)',
-                'leo_date'           => 'LEO date as YYYY-MM-DD',
-                'shipping_bill_no'   => 'Shipping bill number (SB No) if printed',
-                'invoice_no'         => 'Export invoice number if printed',
-                'port_of_loading'    => 'Port of loading if printed (e.g. Nhava Sheva / INNSA1)',
-                'status_or_remarks'  => 'Any status such as LET EXPORT / LEO granted / cleared for export',
+                'leo_number'                => 'LEO / Let Export Order number (e.g. 15/274)',
+                'leo_date'                  => 'LEO date as YYYY-MM-DD',
+                'shipping_bill_no'          => 'Shipping bill number (SB No) if printed',
+                'invoice_no'                => 'Export invoice number if printed',
+                'port_of_loading'           => 'Port of loading if printed (e.g. Nhava Sheva / INNSA1)',
+                'buyer_or_consignee_name'   => 'Overseas buyer / consignee name if printed',
+                'supplier_or_shipper_name'  => 'Supplier / manufacturer name if printed',
+                'status_or_remarks'         => 'Any status such as LET EXPORT / LEO granted / cleared for export',
             ],
             'assessed_copy' => [
-                'assessed_ref_no'    => 'Assessed / ICEGATE tracking id if printed (e.g. SB2108…), else shipping bill number',
-                'assessed_date'      => 'Assessment or shipping bill date as YYYY-MM-DD',
-                'shipping_bill_no'   => 'Shipping bill number (SB No) if printed',
-                'invoice_no'         => 'Export invoice number if printed (e.g. EXP…)',
-                'examiner_or_office' => 'Customs office / port name if printed (e.g. JNCH Nhava Sheva)',
-                'status_or_remarks'  => 'Any status such as Assessed Copy / Passed for stuffing / Examined',
+                'assessed_ref_no'           => 'Assessed / ICEGATE tracking id if printed (e.g. SB2108…), else shipping bill number',
+                'assessed_date'             => 'Assessment or shipping bill date as YYYY-MM-DD',
+                'shipping_bill_no'          => 'Shipping bill number (SB No) if printed',
+                'invoice_no'                => 'Export invoice number if printed (e.g. EXP…)',
+                'examiner_or_office'        => 'Customs office / port name if printed (e.g. JNCH Nhava Sheva)',
+                'buyer_or_consignee_name'   => 'Overseas buyer / consignee name if printed',
+                'buyer_address'             => 'Buyer / consignee address if printed',
+                'supplier_or_shipper_name'  => 'Supplier / manufacturer name if printed',
+                'currency'                  => 'Currency code if printed (e.g. USD, AED, INR)',
+                'total_amount'              => 'FOB / invoice / assessable value as a number if printed',
+                'quantity'                  => 'Total quantity / pieces if printed',
+                'unit_price'                => 'Unit price if printed',
+                'hs_code'                   => 'HS / HSN / CTH code if printed',
+                'status_or_remarks'         => 'Any status such as Assessed Copy / Passed for stuffing / Examined',
             ],
             'bl_final' => [
-                'bl_number'          => 'Bill of Lading number',
-                'bl_date'            => 'B/L date as YYYY-MM-DD',
-                'vessel_or_voyage'   => 'Vessel / voyage if printed',
-                'container_no'       => 'Container number if printed',
-                'port_of_loading'    => 'Port of loading if printed',
-                'port_of_discharge'  => 'Port of discharge if printed',
-                'status_or_remarks'  => 'Any status line or short note on the B/L',
+                'bl_number'                 => 'Bill of Lading number',
+                'bl_date'                   => 'B/L date as YYYY-MM-DD',
+                'vessel_or_voyage'          => 'Vessel / voyage if printed',
+                'container_no'              => 'Container number if printed',
+                'port_of_loading'           => 'Port of loading if printed',
+                'port_of_discharge'         => 'Port of discharge if printed',
+                'buyer_or_consignee_name'   => 'Consignee / notify party / overseas buyer name if printed',
+                'supplier_or_shipper_name'  => 'Shipper / supplier name if printed (when distinct from the Indian exporter)',
+                'status_or_remarks'         => 'Any status line or short note on the B/L',
             ],
             'clp' => [
-                'clp_ref_no'         => 'CLP / container load plan reference if printed',
-                'document_date'      => 'Document date as YYYY-MM-DD',
-                'container_no'       => 'Container number if printed',
-                'seal_no'            => 'Seal number if printed',
-                'shipping_bill_no'   => 'Shipping bill number if printed',
-                'status_or_remarks'  => 'Any status line or short note on the CLP',
+                'clp_ref_no'                => 'CLP / container load plan reference if printed',
+                'document_date'             => 'Document date as YYYY-MM-DD',
+                'container_no'              => 'Container number if printed',
+                'seal_no'                   => 'Seal number if printed',
+                'shipping_bill_no'          => 'Shipping bill number if printed',
+                'buyer_or_consignee_name'   => 'Overseas buyer / consignee name if printed',
+                'supplier_or_shipper_name'  => 'Supplier / shipper name if printed',
+                'status_or_remarks'         => 'Any status line or short note on the CLP',
             ],
             'measurement_copy' => [
-                'measurement_ref'    => 'Certificate of Measurement number (e.g. 21649)',
-                'document_date'      => 'Dock / measurement date as YYYY-MM-DD',
-                'shipping_bill_no'   => 'Ship bill / shipping bill number if printed',
-                'packages'           => 'Number of packages / cartons if printed',
-                'cbm_or_volume'      => 'Total CBM / M3 volume if printed (e.g. 3.536)',
-                'dimensions'         => 'Carton dimensions LxWxH in cm if printed',
-                'status_or_remarks'  => 'Shipper / measurer / any short note',
+                'measurement_ref'           => 'Certificate of Measurement number (e.g. 21649)',
+                'document_date'             => 'Dock / measurement date as YYYY-MM-DD',
+                'shipping_bill_no'          => 'Ship bill / shipping bill number if printed',
+                'packages'                  => 'Number of packages / cartons if printed',
+                'cbm_or_volume'             => 'Total CBM / M3 volume if printed (e.g. 3.536)',
+                'dimensions'                => 'Carton dimensions LxWxH in cm if printed',
+                'buyer_or_consignee_name'   => 'Overseas buyer / consignee name if printed',
+                'supplier_or_shipper_name'  => 'Supplier / shipper name if printed',
+                'status_or_remarks'         => 'Shipper / measurer / any short note',
             ],
             'insurance' => [
-                'policy_or_cert_no'  => 'Insurance certificate / policy number (e.g. C003114995)',
-                'document_date'      => 'Certificate issue date as YYYY-MM-DD',
-                'bl_number'          => 'Bill of lading / BL number if printed',
-                'bl_date'            => 'Bill of lading date as YYYY-MM-DD if printed; if only one date appears on the certificate, use that same date here',
-                'insured_amount'     => 'Amount insured with currency if printed',
-                'insurer_name'       => 'Insurance company name if printed (e.g. Tata AIG)',
-                'status_or_remarks'  => 'Invoice no / conveyance / any short note',
+                'policy_or_cert_no'         => 'Insurance certificate / policy number (e.g. C003114995)',
+                'document_date'             => 'Certificate issue date as YYYY-MM-DD',
+                'bl_number'                 => 'Bill of lading / BL number if printed',
+                'bl_date'                   => 'Bill of lading date as YYYY-MM-DD if printed; if only one date appears on the certificate, use that same date here',
+                'insured_amount'            => 'Amount insured with currency if printed',
+                'insurer_name'              => 'Insurance company name if printed (e.g. Tata AIG)',
+                'buyer_or_consignee_name'   => 'Assured / overseas buyer / consignee name if printed',
+                'supplier_or_shipper_name'  => 'Supplier / shipper name if printed',
+                'status_or_remarks'         => 'Invoice no / conveyance / any short note',
             ],
             'payment_received' => [
-                'swift_or_ref_no'    => 'Swift / UTR / payment reference number',
-                'payment_date'       => 'Payment date as YYYY-MM-DD',
-                'amount'             => 'Payment amount with currency if printed',
-                'payer_or_bank'      => 'Payer / remitting bank if printed',
-                'invoice_no'         => 'Related invoice number if printed',
-                'status_or_remarks'  => 'Any status line or short note',
+                'swift_or_ref_no'           => 'Swift / UTR / payment reference number',
+                'payment_date'              => 'Payment date as YYYY-MM-DD',
+                'amount'                    => 'Payment amount with currency if printed',
+                'payer_or_bank'             => 'Remitting bank name if printed',
+                'buyer_or_consignee_name'   => 'Overseas buyer / remitter / ordering customer name if printed',
+                'supplier_or_shipper_name'  => 'Supplier name if printed (usually null on Swift)',
+                'invoice_no'                => 'Related invoice number if printed',
+                'status_or_remarks'         => 'Any status line or short note',
             ],
             'eefc_upload' => [
-                'eefc_ref_no'        => 'EEFC / bank payment proof reference',
-                'document_date'      => 'Document date as YYYY-MM-DD',
-                'amount'             => 'Amount credited if printed',
-                'bank_name'          => 'Bank name if printed',
-                'status_or_remarks'  => 'Any status line or short note',
+                'eefc_ref_no'               => 'EEFC / bank payment proof reference',
+                'document_date'             => 'Document date as YYYY-MM-DD',
+                'amount'                    => 'Amount credited if printed',
+                'bank_name'                 => 'Bank name if printed',
+                'buyer_or_consignee_name'   => 'Overseas buyer name if printed',
+                'supplier_or_shipper_name'  => 'Supplier name if printed',
+                'status_or_remarks'         => 'Any status line or short note',
             ],
             'firc' => [
-                'firc_no'            => 'FIRC number',
-                'document_date'      => 'FIRC date as YYYY-MM-DD',
-                'amount'             => 'FIRC amount with currency if printed',
-                'bank_name'          => 'Issuing bank if printed',
-                'status_or_remarks'  => 'Any status line or short note',
+                'firc_no'                   => 'FIRC number',
+                'document_date'             => 'FIRC date as YYYY-MM-DD',
+                'amount'                    => 'FIRC amount with currency if printed',
+                'bank_name'                 => 'Issuing bank if printed',
+                'buyer_or_consignee_name'   => 'Overseas buyer / remitter name if printed',
+                'supplier_or_shipper_name'  => 'Supplier name if printed',
+                'status_or_remarks'         => 'Any status line or short note',
             ],
             'bank_certificate' => [
-                'certificate_no'     => 'Bank certificate number',
-                'document_date'      => 'Certificate date as YYYY-MM-DD',
-                'amount'             => 'Amount if printed',
-                'bank_name'          => 'Issuing bank if printed',
-                'status_or_remarks'  => 'Any status line or short note',
+                'certificate_no'            => 'Bank certificate number',
+                'document_date'             => 'Certificate date as YYYY-MM-DD',
+                'amount'                    => 'Amount if printed',
+                'bank_name'                 => 'Issuing bank if printed',
+                'buyer_or_consignee_name'   => 'Overseas buyer name if printed',
+                'supplier_or_shipper_name'  => 'Supplier name if printed',
+                'status_or_remarks'         => 'Any status line or short note',
             ],
             'ebrc' => [
-                'ebrc_no'            => 'eBRC number',
-                'document_date'      => 'eBRC date as YYYY-MM-DD',
-                'shipping_bill_no'   => 'Shipping bill number if printed',
-                'invoice_no'         => 'Invoice number if printed',
-                'amount'             => 'Realised amount if printed',
-                'status_or_remarks'  => 'Any status line or short note',
+                'ebrc_no'                   => 'eBRC number',
+                'document_date'             => 'eBRC date as YYYY-MM-DD',
+                'shipping_bill_no'          => 'Shipping bill number if printed',
+                'invoice_no'                => 'Invoice number if printed',
+                'amount'                    => 'Realised amount if printed',
+                'buyer_or_consignee_name'   => 'Overseas buyer name if printed',
+                'supplier_or_shipper_name'  => 'Supplier name if printed',
+                'status_or_remarks'         => 'Any status line or short note',
             ],
             default => [],
         };
@@ -334,7 +384,13 @@ PROMPT;
 
     /**
      * @param  array<string, mixed>  $fields
-     * @return array{reference_no: ?string, remarks: ?string, fields: array<string, mixed>}
+     * @return array{
+     *     reference_no: ?string,
+     *     remarks: ?string,
+     *     buyer_name: ?string,
+     *     supplier_name: ?string,
+     *     fields: array<string, mixed>
+     * }
      */
     private function mapToChecklistFields(string $typeCode, array $fields): array
     {
@@ -348,6 +404,8 @@ PROMPT;
 
         $reference = null;
         $remarksParts = [];
+        $buyerName = $nullIfBlank($fields['buyer_or_consignee_name'] ?? null);
+        $supplierName = $nullIfBlank($fields['supplier_or_shipper_name'] ?? null);
 
         switch ($typeCode) {
             case 'cha_checklist':
@@ -628,10 +686,19 @@ PROMPT;
                 break;
         }
 
+        if ($buyerName) {
+            $remarksParts[] = 'Buyer: '.$buyerName;
+        }
+        if ($supplierName) {
+            $remarksParts[] = 'Supplier: '.$supplierName;
+        }
+
         return [
-            'reference_no' => $reference,
-            'remarks'      => $remarksParts === [] ? null : implode(' · ', $remarksParts),
-            'fields'       => $fields,
+            'reference_no'   => $reference,
+            'remarks'        => $remarksParts === [] ? null : implode(' · ', $remarksParts),
+            'buyer_name'     => $buyerName,
+            'supplier_name'  => $supplierName,
+            'fields'         => $fields,
         ];
     }
 

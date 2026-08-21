@@ -1,3 +1,15 @@
+@php
+    $dot = function (string $state): string {
+        return match ($state) {
+            'verified' => 'text-success',
+            'errors'   => 'text-danger',
+            'review'   => 'text-warning',
+            'uploaded' => 'text-info',
+            default    => 'text-body-secondary',
+        };
+    };
+@endphp
+
 <x-app-layout>
     <x-slot name="header">Export Documents</x-slot>
 
@@ -36,28 +48,44 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Doc No.</th>
-                        <th>OC No.</th>
+                        <th>Export Order</th>
                         <th>Buyer</th>
-                        <th>Shipment Date</th>
-                        <th style="width:140px">Checklist</th>
-                        <th style="width:120px">Status</th>
-                        <th class="text-end" style="width:90px">Actions</th>
+                        <th class="text-center">Invoice</th>
+                        <th class="text-center">Packing List</th>
+                        <th class="text-center">Shipping Bill</th>
+                        <th>OCR Status</th>
+                        <th class="text-end" style="width:120px">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($documents as $document)
+                        @php $ocr = $ocrDashboards[$document->id] ?? ['status' => 'pending', 'status_label' => 'Not scanned', 'invoice' => 'pending', 'packing_list' => 'pending', 'shipping_bill' => 'pending', 'action' => 'Scan']; @endphp
                         <tr>
-                            <td class="fw-semibold font-monospace">{{ $document->doc_num }}</td>
-                            <td>{{ $document->orderConfirmation?->oc_num ?? '—' }}</td>
+                            <td>
+                                <div class="fw-semibold font-monospace">{{ $document->doc_num }}</div>
+                                <div class="small text-body-secondary">{{ $document->orderConfirmation?->oc_num ?? '—' }}</div>
+                            </td>
                             <td>{{ $document->buyer?->company_name }} <span class="text-body-secondary">({{ $document->buyer?->display_code }})</span></td>
-                            <td>{{ $document->shipment_date?->format('d M Y') ?? '—' }}</td>
-                            <td>{{ $document->checklistProgress() }}</td>
-                            <td><span class="badge text-bg-{{ $document->statusColor() }}">{{ $document->statusLabel() }}</span></td>
+                            <td class="text-center"><i class="bi bi-circle-fill {{ $dot($ocr['invoice']) }}" title="{{ $ocr['invoice'] }}"></i></td>
+                            <td class="text-center"><i class="bi bi-circle-fill {{ $dot($ocr['packing_list']) }}" title="{{ $ocr['packing_list'] }}"></i></td>
+                            <td class="text-center"><i class="bi bi-circle-fill {{ $dot($ocr['shipping_bill']) }}" title="{{ $ocr['shipping_bill'] }}"></i></td>
+                            <td>
+                                <span @class([
+                                    'badge',
+                                    'text-bg-success' => ($ocr['status'] ?? '') === 'verified',
+                                    'text-bg-danger' => ($ocr['status'] ?? '') === 'errors',
+                                    'text-bg-warning' => ($ocr['status'] ?? '') === 'review',
+                                    'text-bg-secondary' => ! in_array(($ocr['status'] ?? ''), ['verified', 'errors', 'review'], true),
+                                ])>{{ $ocr['status_label'] ?? 'Not scanned' }}</span>
+                            </td>
                             <td class="text-end">
                                 <a href="{{ route('export.documents.show', $document) }}"
                                    class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="View">
                                     <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ route('export.ocr.index', ['export_document_id' => $document->id]) }}"
+                                   class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="{{ $ocr['action'] ?? 'OCR' }}">
+                                    {{ $ocr['action'] ?? 'Scan' }}
                                 </a>
                             </td>
                         </tr>
@@ -76,6 +104,10 @@
 
         <div class="text-body-secondary small mt-2">
             Showing {{ $documents->firstItem() ?? 0 }}–{{ $documents->lastItem() ?? 0 }} of {{ $documents->total() }}
+            · Dots: <span class="text-success">●</span> verified
+            <span class="text-warning">●</span> review
+            <span class="text-danger">●</span> errors
+            <span class="text-body-secondary">●</span> pending
         </div>
     </x-ui.card>
 </x-app-layout>

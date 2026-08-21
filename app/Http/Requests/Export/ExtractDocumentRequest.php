@@ -25,6 +25,7 @@ class ExtractDocumentRequest extends FormRequest
                 'string',
                 Rule::in(GeminiDocumentExtractor::UPLOADED_TYPES),
             ],
+            'export_document_id' => ['nullable', 'integer', 'exists:export_documents,id'],
         ];
     }
 

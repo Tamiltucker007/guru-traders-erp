@@ -20,6 +20,8 @@
 </head>
 <body>
 
+    <x-pdf.letterhead :company="$company" title="Item Summary" :subtitle="$variantTitle.' — '.$document->doc_num" />
+
     <p class="title">ITEM SUMMARY</p>
     <p class="subtitle">{{ $variantTitle }} — {{ $document->doc_num }}</p>
 
@@ -179,9 +181,7 @@
         @endforeach
     @endif
 
-    <div class="small center" style="margin-top:10px; color:#555;">
-        This is a computer generated document — {{ $company->company_name }}
-    </div>
+    <x-pdf.footer :company="$company" />
 
 </body>
 </html>

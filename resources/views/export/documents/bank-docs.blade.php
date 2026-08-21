@@ -21,6 +21,8 @@
 </head>
 <body>
 
+    <x-pdf.letterhead :company="$company" title="Documents to Bank" :subtitle="$variantTitle.' — '.$document->doc_num" />
+
     @if($variant === 'gr-waiver')
         <p class="title">GR WAIVER — DOCUMENTS TO BANK</p>
         <p class="subtitle">{{ $document->doc_num }}</p>
@@ -137,9 +139,7 @@
         </tr>
     </table>
 
-    <div class="small center" style="margin-top:6px; color:#555;">
-        This is a computer generated document — {{ $company->company_name }}
-    </div>
+    <x-pdf.footer :company="$company" />
 
 </body>
 </html>

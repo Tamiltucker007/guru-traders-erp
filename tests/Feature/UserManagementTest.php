@@ -49,6 +49,19 @@ class UserManagementTest extends TestCase
         $this->actingAs($admin)->get(route('user-management.permissions.index'))->assertOk();
     }
 
+    public function test_super_admin_sidebar_links_user_management_to_users_index(): void
+    {
+        $admin = $this->userWithRole('Super Admin');
+
+        $this->actingAs($admin)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee(route('user-management.users.index', absolute: false), false)
+            ->assertSee(route('user-management.roles.index', absolute: false), false)
+            ->assertSee(route('user-management.permissions.index', absolute: false), false)
+            ->assertDontSee('User Management<i class="nav-arrow', false);
+    }
+
     public function test_dashboard_renders_for_every_seeded_role(): void
     {
         foreach (config('permissions.roles') as $roleName => $config) {

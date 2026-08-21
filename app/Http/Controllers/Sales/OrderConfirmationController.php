@@ -13,6 +13,7 @@ use App\Models\DocumentFormat;
 use App\Models\FobValue;
 use App\Models\Inquiry;
 use App\Models\OrderConfirmation;
+use App\Services\Export\OcrOrderContextBuilder;
 use App\Services\Sales\OrderConfirmationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,8 +24,10 @@ use RuntimeException;
 
 class OrderConfirmationController extends Controller implements HasMiddleware
 {
-    public function __construct(private readonly OrderConfirmationService $confirmations)
-    {
+    public function __construct(
+        private readonly OrderConfirmationService $confirmations,
+        private readonly OcrOrderContextBuilder $orderContext,
+    ) {
     }
 
     /**
@@ -79,14 +82,17 @@ class OrderConfirmationController extends Controller implements HasMiddleware
 
     public function show(OrderConfirmation $orderConfirmation): View
     {
+        $orderConfirmation->load([
+            'buyer', 'category', 'format', 'agent', 'currency', 'sourceInquiry',
+            'items' => fn ($q) => $q->with(['product', 'supplier', 'fobValue', 'colours.sizes', 'purchaseOrder', 'exportDocument']),
+            'purchaseOrders',
+            'exportDocuments',
+            'creator', 'updater',
+        ]);
+
         return view('sales.order-confirmations.show', [
-            'orderConfirmation' => $orderConfirmation->load([
-                'buyer', 'category', 'format', 'agent', 'currency', 'sourceInquiry',
-                'items' => fn ($q) => $q->with(['product', 'supplier', 'fobValue', 'colours.sizes', 'purchaseOrder', 'exportDocument']),
-                'purchaseOrders',
-                'exportDocuments',
-                'creator', 'updater',
-            ]),
+            'orderConfirmation' => $orderConfirmation,
+            'orderContext' => $this->orderContext->buildFromOrderConfirmation($orderConfirmation),
         ]);
     }
 

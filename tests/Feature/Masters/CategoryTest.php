@@ -54,6 +54,28 @@ class CategoryTest extends TestCase
         );
     }
 
+    public function test_next_code_skips_a_code_already_in_use(): void
+    {
+        Category::forceCreate(['code' => 'CAT001', 'name' => 'Woven Garments', 'status' => 'active']);
+
+        $user = $this->actingAsRole('Super Admin');
+
+        $this->actingAs($user)
+            ->get(route('masters.categories.create'))
+            ->assertOk()
+            ->assertSee('CAT002');
+
+        $this->actingAs($user)
+            ->post(route('masters.categories.store'), [
+                'name'   => "Men's T-shirt",
+                'status' => 'active',
+            ])
+            ->assertRedirect(route('masters.categories.index'));
+
+        $this->assertSame("Men's T-shirt", Category::where('code', 'CAT002')->value('name'));
+        $this->assertSame(2, Category::count());
+    }
+
     public function test_a_deleted_category_does_not_release_its_code(): void
     {
         $user = $this->actingAsRole('Super Admin');

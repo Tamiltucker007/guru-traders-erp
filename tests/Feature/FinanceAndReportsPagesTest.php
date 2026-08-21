@@ -62,7 +62,10 @@ class FinanceAndReportsPagesTest extends TestCase
         $this->get(route('finance.debit-notes.index'))->assertOk();
         $this->get(route('finance.supplier-payments.index'))->assertOk();
         $this->get(route('finance.buyer-receipts.index'))->assertOk();
-        $this->get(route('finance.agent-commission.index'))->assertOk();
+        $this->get(route('finance.agent-commission.index'))
+            ->assertOk()
+            ->assertSee('>Agent Commission</p>', false)
+            ->assertDontSee('href="'.route('dashboard', absolute: false).'" class="nav-link">Dashboard</a>', false);
         $this->get(route('reports.index'))->assertOk();
         $this->get(route('reports.outstanding.index'))->assertOk();
     }

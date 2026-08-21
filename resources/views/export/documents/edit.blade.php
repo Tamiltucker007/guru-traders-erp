@@ -540,107 +540,108 @@
             </div>
         </form>
     </x-ui.card>
-</x-app-layout>
 
-@push('scripts')
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    /* ------------------------------------------------------------------ *
-     * Cartons (Packing List Formats B & C) — two-level repeater: cartons,
-     * each with its own repeatable line items. Field names carry both
-     * indexes (cartons[ci][lines][li][field]), so both levels are
-     * reindexed after any add/remove or a later row would silently
-     * overwrite an earlier one on submit.
-     * ------------------------------------------------------------------ */
-    const blocksWrap    = document.getElementById('carton-blocks');
-    const addCartonBtn  = document.getElementById('add-carton');
-    const cartonTemplate = document.getElementById('carton-block-template');
-    const lineTemplate   = document.getElementById('carton-line-template');
+    {{-- Must stay inside x-app-layout: @push after the closing tag never reaches @stack. --}}
+    @push('scripts')
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        /* ------------------------------------------------------------------ *
+         * Cartons (Packing List Formats B & C) — two-level repeater: cartons,
+         * each with its own repeatable line items. Field names carry both
+         * indexes (cartons[ci][lines][li][field]), so both levels are
+         * reindexed after any add/remove or a later row would silently
+         * overwrite an earlier one on submit.
+         * ------------------------------------------------------------------ */
+        const blocksWrap    = document.getElementById('carton-blocks');
+        const addCartonBtn  = document.getElementById('add-carton');
+        const cartonTemplate = document.getElementById('carton-block-template');
+        const lineTemplate   = document.getElementById('carton-line-template');
 
-    if (! blocksWrap || ! addCartonBtn) return;
+        if (! blocksWrap || ! addCartonBtn) return;
 
-    function reindexCarton(block, ci) {
-        block.querySelectorAll('[name]').forEach(function (field) {
-            field.name = field.name.replace(/cartons\[\d+\]/, 'cartons[' + ci + ']');
-        });
-
-        reindexLines(block, ci);
-    }
-
-    function reindexLines(block, ci) {
-        block.querySelectorAll('[data-line-row]').forEach(function (row, li) {
-            row.querySelectorAll('[name]').forEach(function (field) {
-                field.name = field.name.replace(/\[lines\]\[\d+\]/, '[lines][' + li + ']');
+        function reindexCarton(block, ci) {
+            block.querySelectorAll('[name]').forEach(function (field) {
+                field.name = field.name.replace(/cartons\[\d+\]/, 'cartons[' + ci + ']');
             });
-        });
-    }
 
-    function reindexAll() {
-        blocksWrap.querySelectorAll('[data-carton-block]').forEach(function (block, ci) {
-            reindexCarton(block, ci);
-        });
-    }
-
-    addCartonBtn.addEventListener('click', function () {
-        const ci = blocksWrap.querySelectorAll('[data-carton-block]').length;
-        const block = cartonTemplate.content.cloneNode(true).querySelector('[data-carton-block]');
-
-        block.querySelectorAll('[name]').forEach(function (field) {
-            field.name = field.name.replace('__CI__', ci);
-        });
-
-        blocksWrap.appendChild(block);
-        block.querySelector('input')?.focus();
-    });
-
-    blocksWrap.addEventListener('click', function (event) {
-        const addLine = event.target.closest('.js-add-line');
-        const removeLine = event.target.closest('.js-remove-line');
-        const removeCarton = event.target.closest('.js-remove-carton');
-
-        if (addLine) {
-            const block = addLine.closest('[data-carton-block]');
-            const tbody = block.querySelector('[data-carton-lines] tbody');
-            const row = lineTemplate.content.cloneNode(true).querySelector('[data-line-row]');
-
-            tbody.appendChild(row);
-            reindexAll();
-            row.querySelector('input')?.focus();
-            return;
+            reindexLines(block, ci);
         }
 
-        if (removeLine) {
-            const tbody = removeLine.closest('tbody');
-            const rows = tbody.querySelectorAll('[data-line-row]');
-
-            // Keep at least one line per carton — an empty table has no
-            // affordance beyond the button, same call as every other
-            // repeater in this codebase.
-            if (rows.length === 1) {
-                rows[0].querySelectorAll('input').forEach(function (field) { field.value = ''; });
-                rows[0].querySelector('input[name*="[unit]"]').value = 'PCS';
-            } else {
-                removeLine.closest('[data-line-row]').remove();
-            }
-
-            reindexAll();
-            return;
-        }
-
-        if (removeCarton) {
-            const blocks = blocksWrap.querySelectorAll('[data-carton-block]');
-
-            if (blocks.length === 1) {
-                removeCarton.closest('[data-carton-block]').querySelectorAll('input').forEach(function (field) {
-                    field.value = field.name.includes('[unit]') ? 'PCS' : '';
+        function reindexLines(block, ci) {
+            block.querySelectorAll('[data-line-row]').forEach(function (row, li) {
+                row.querySelectorAll('[name]').forEach(function (field) {
+                    field.name = field.name.replace(/\[lines\]\[\d+\]/, '[lines][' + li + ']');
                 });
-            } else {
-                removeCarton.closest('[data-carton-block]').remove();
+            });
+        }
+
+        function reindexAll() {
+            blocksWrap.querySelectorAll('[data-carton-block]').forEach(function (block, ci) {
+                reindexCarton(block, ci);
+            });
+        }
+
+        addCartonBtn.addEventListener('click', function () {
+            const ci = blocksWrap.querySelectorAll('[data-carton-block]').length;
+            const block = cartonTemplate.content.cloneNode(true).querySelector('[data-carton-block]');
+
+            block.querySelectorAll('[name]').forEach(function (field) {
+                field.name = field.name.replace('__CI__', ci);
+            });
+
+            blocksWrap.appendChild(block);
+            block.querySelector('input')?.focus();
+        });
+
+        blocksWrap.addEventListener('click', function (event) {
+            const addLine = event.target.closest('.js-add-line');
+            const removeLine = event.target.closest('.js-remove-line');
+            const removeCarton = event.target.closest('.js-remove-carton');
+
+            if (addLine) {
+                const block = addLine.closest('[data-carton-block]');
+                const tbody = block.querySelector('[data-carton-lines] tbody');
+                const row = lineTemplate.content.cloneNode(true).querySelector('[data-line-row]');
+
+                tbody.appendChild(row);
+                reindexAll();
+                row.querySelector('input')?.focus();
+                return;
             }
 
-            reindexAll();
-        }
+            if (removeLine) {
+                const tbody = removeLine.closest('tbody');
+                const rows = tbody.querySelectorAll('[data-line-row]');
+
+                // Keep at least one line per carton — an empty table has no
+                // affordance beyond the button, same call as every other
+                // repeater in this codebase.
+                if (rows.length === 1) {
+                    rows[0].querySelectorAll('input').forEach(function (field) { field.value = ''; });
+                    rows[0].querySelector('input[name*="[unit]"]').value = 'PCS';
+                } else {
+                    removeLine.closest('[data-line-row]').remove();
+                }
+
+                reindexAll();
+                return;
+            }
+
+            if (removeCarton) {
+                const blocks = blocksWrap.querySelectorAll('[data-carton-block]');
+
+                if (blocks.length === 1) {
+                    removeCarton.closest('[data-carton-block]').querySelectorAll('input').forEach(function (field) {
+                        field.value = field.name.includes('[unit]') ? 'PCS' : '';
+                    });
+                } else {
+                    removeCarton.closest('[data-carton-block]').remove();
+                }
+
+                reindexAll();
+            }
+        });
     });
-});
-</script>
-@endpush
+    </script>
+    @endpush
+</x-app-layout>
