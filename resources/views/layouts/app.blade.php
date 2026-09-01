@@ -140,6 +140,14 @@
                :not(:hover) so the hover-expanded rail stays identical to the
                normal sidebar. */
 
+            .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) {
+                overflow-x: hidden;
+            }
+
+            .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-wrapper {
+                overflow-x: hidden;
+            }
+
             /* 1. Our links carry a .6rem side margin, which pushes AdminLTE's
                   3.6rem link past the 4.6rem rail and knocks the icons off
                   centre. Centre them on the rail instead. */
@@ -147,9 +155,18 @@
                 margin-left: auto; margin-right: auto;
                 padding-left: 0; padding-right: 0;
                 justify-content: center;
+                white-space: nowrap;
+            }
+            .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-menu .nav-link p,
+            .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-menu .nav-link .nav-arrow {
+                display: none !important;
+            }
+            .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-menu .nav-treeview {
+                display: none !important;
             }
             .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-menu .nav-icon {
                 width: auto;
+                margin-right: 0 !important;
             }
             /* The active marker is an inset left edge — invisible once the link
                is centred, so the collapsed state shows it as a filled pill. */
@@ -171,11 +188,18 @@
                   Hovering the rail expands it and brings the button back, and
                   the header hamburger works either way. */
             .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-toggle { display: none; }
+            .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .brand-text { display: none !important; }
             .sidebar-mini.sidebar-collapse .app-sidebar:not(:hover) .sidebar-brand {
                 justify-content: center; padding-left: .5rem; padding-right: .5rem;
             }
             /* Points the way it will move. */
             .sidebar-mini.sidebar-collapse .sidebar-toggle i { transform: rotate(180deg); }
+
+            /* Smooth transition when rail expands on hover */
+            .sidebar-mini.sidebar-collapse .app-sidebar:hover {
+                box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15) !important;
+                z-index: 1039;
+            }
 
             /* Below the expand breakpoint the sidebar is an off-canvas drawer,
                not a rail: mini mode there would leave a 4.6rem strip of icons
