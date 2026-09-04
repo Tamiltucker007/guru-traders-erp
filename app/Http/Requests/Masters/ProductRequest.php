@@ -105,9 +105,13 @@ abstract class ProductRequest extends FormRequest
                 Rule::exists('calculation_bases', 'id'),
             ];
 
-            // Only RoSCTL is quoted as two percentages (sheet cols O and P).
-            $rules["incentives.{$scheme}.percent_2"] = in_array($scheme, ProductIncentive::TWO_PERCENT_SCHEMES, true)
+            // Only RoSCTL is quoted as two percentages and two caps.
+            $two = in_array($scheme, ProductIncentive::TWO_PERCENT_SCHEMES, true);
+            $rules["incentives.{$scheme}.percent_2"] = $two
                 ? ['nullable', 'numeric', 'min:0', 'max:100']
+                : ['prohibited'];
+            $rules["incentives.{$scheme}.cap_value_2"] = $two
+                ? ['nullable', 'numeric', 'min:0']
                 : ['prohibited'];
         }
 
@@ -135,6 +139,7 @@ abstract class ProductRequest extends FormRequest
             $attributes["incentives.{$scheme}.percent_1"]            = "{$label} %";
             $attributes["incentives.{$scheme}.percent_2"]            = "{$label} % 2";
             $attributes["incentives.{$scheme}.cap_value"]            = "{$label} cap value";
+            $attributes["incentives.{$scheme}.cap_value_2"]          = "{$label} cap value 2";
             $attributes["incentives.{$scheme}.calculation_basis_id"] = "{$label} calculated on";
         }
 

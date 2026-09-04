@@ -91,21 +91,24 @@
              fields. --}}
         <x-ui.select name="unit_po" label="Unit (PO & OC)" :options="$units"
                      :selected="$product?->unit_po" horizontal searchable
-                     placeholder="Search unit…"
-                     hint="From the Units defined on the Order Format master." />
+                     placeholder="Search or type a new unit…"
+                     data-create-url="{{ route('masters.products.units.store') }}"
+                     hint="From Order Format units — type a new name to add it everywhere." />
 
         <x-ui.select name="unit_export" label="Unit (Export Docs)" :options="$units"
                      :selected="$product?->unit_export" horizontal searchable
-                     placeholder="Search unit…" />
+                     placeholder="Search or type a new unit…"
+                     data-create-url="{{ route('masters.products.units.store') }}" />
 
         {{-- Col H — a text box on the sheet, not a dropdown --}}
         <x-ui.field name="hsn_code" label="HSN Code" :value="$product?->hsn_code"
                     horizontal placeholder="620520" />
 
-        {{-- Col J --}}
+        {{-- Col J — includes N/A for products with no band --}}
         <x-ui.select name="price_band_id" label="Price Band" horizontal searchable
                      :options="$priceBands" :selected="$product?->price_band_id"
-                     placeholder="Search band…" />
+                     placeholder="Search band…"
+                     hint="Choose N/A when price band does not apply." />
 
         {{-- Col K — "different rates with option to add in the future". Typing
              a rate not already in the list adds it, same as Payment Terms and
@@ -124,20 +127,18 @@
 
 {{-- ===================== L–U · EXPORT INCENTIVES ==================== --}}
 <x-ui.form-section title="Export Incentives" icon="bi-cash-coin"
-                   subtitle="Leave a row blank if that scheme does not apply to this product.">
-    {{-- The one place that stays a grid. The sheet lays columns L to U out the
-         same way, and three schemes x four fields as separate lines would be
-         twelve rows repeating the same four labels. --}}
+                   subtitle="Rate % applies to FOB value; Cap Value applies per PCS. Claim = the lower of the two. Leave a row blank if a scheme does not apply.">
     <div class="form-stack">
-        <div class="table-responsive">
-            <table class="table grid-table align-middle mb-0">
+        <div class="table-responsive incentives-grid-wrap">
+            <table class="table grid-table align-middle mb-0 incentives-grid">
                 <thead>
                     <tr>
                         <th style="width:90px">Applicable</th>
                         <th style="width:110px">Scheme</th>
-                        <th style="width:120px">Rate %</th>
-                        <th style="width:120px">Rate % 2</th>
-                        <th style="width:140px">Cap Value</th>
+                        <th style="width:110px">Rate %</th>
+                        <th style="width:110px">Rate % 2</th>
+                        <th style="width:130px">Cap Value <span class="fw-normal text-body-secondary">(per PCS)</span></th>
+                        <th style="width:130px">Cap Value 2 <span class="fw-normal text-body-secondary">(per PCS)</span></th>
                         <th style="min-width:200px">Calculated On</th>
                     </tr>
                 </thead>
@@ -147,6 +148,7 @@
                             $twoPercent = in_array($scheme, ProductIncentive::TWO_PERCENT_SCHEMES, true);
                             $schemeEnabled = filled($incentive($scheme, 'percent_1'))
                                 || filled($incentive($scheme, 'cap_value'))
+                                || filled($incentive($scheme, 'cap_value_2'))
                                 || filled($incentive($scheme, 'calculation_basis_id'));
                         @endphp
 
@@ -179,7 +181,7 @@
 
                             <td>
                                 @if($twoPercent)
-                                    {{-- Only RoSCTL is quoted as two percentages (sheet cols O and P). --}}
+                                    {{-- Only RoSCTL is quoted as two percentages (sheet cols S and W). --}}
                                     <input type="number" step="0.001" min="0" max="100" placeholder="0.000"
                                            name="incentives[{{ $scheme }}][percent_2]"
                                            value="{{ $incentive($scheme, 'percent_2') }}"
@@ -205,6 +207,22 @@
                             </td>
 
                             <td>
+                                @if($twoPercent)
+                                    {{-- RoSCTL second cap (sheet col Y) — pairs with Rate % 2. --}}
+                                    <input type="number" step="0.0001" min="0" placeholder="0.0000"
+                                           name="incentives[{{ $scheme }}][cap_value_2]"
+                                           value="{{ $incentive($scheme, 'cap_value_2') }}"
+                                           data-incentive-field="{{ $scheme }}"
+                                           class="form-control @error('incentives.'.$scheme.'.cap_value_2') is-invalid @enderror">
+                                    @error('incentives.'.$scheme.'.cap_value_2')
+                                        <div class="cell-error">{{ $message }}</div>
+                                    @enderror
+                                @else
+                                    <div class="na">—</div>
+                                @endif
+                            </td>
+
+                            <td>
                                 <select name="incentives[{{ $scheme }}][calculation_basis_id]"
                                         data-searchable data-placeholder="Search basis…"
                                         data-incentive-field="{{ $scheme }}"
@@ -223,6 +241,25 @@
                     @endforeach
                 </tbody>
             </table>
+        </div>
+
+        {{-- Live claim preview — same rule used at shipment time.
+             RoSCTL with two caps: min(p1×FOB,c1×PCS) + min(p2×FOB,c2×PCS). --}}
+        <div class="border rounded p-3 mt-3 bg-body-tertiary incentive-claim-preview">
+            <div class="d-flex flex-wrap align-items-end gap-3 mb-2">
+                <div>
+                    <label class="form-label small mb-1">Sample FOB value (₹)</label>
+                    <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="incentive-sample-fob" value="10000" style="max-width:10rem">
+                </div>
+                <div>
+                    <label class="form-label small mb-1">Sample qty (PCS)</label>
+                    <input type="number" step="1" min="0" class="form-control form-control-sm" id="incentive-sample-pcs" value="100" style="max-width:8rem">
+                </div>
+                <div class="form-text mb-1">
+                    Claim = <strong>min</strong>( Rate% × FOB , Cap × PCS ). RoSCTL with 2 caps = leg1 + leg2.
+                </div>
+            </div>
+            <div id="incentive-claim-rows" class="small"></div>
         </div>
     </div>
 </x-ui.form-section>
@@ -418,6 +455,10 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.js-incentive-toggle').forEach(function (toggle) {
         const scheme = toggle.dataset.scheme;
         const fields = document.querySelectorAll('[data-incentive-field="' + scheme + '"]');
+        const fobBasisId = @json(
+            collect($calculationBases)->search(fn ($label) => str_contains(strtolower((string) $label), 'fob'))
+                ?: collect($calculationBases)->keys()->first()
+        );
 
         function apply() {
             fields.forEach(function (field) {
@@ -432,13 +473,102 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 } else if (field.tomselect) {
                     field.tomselect.enable();
+                    // Default Calculated On → FOB Value (rate side of the claim rule).
+                    if (field.name && field.name.indexOf('[calculation_basis_id]') !== -1 && ! field.value && fobBasisId) {
+                        field.tomselect.setValue(String(fobBasisId), true);
+                    }
+                } else if (field.name && field.name.indexOf('[calculation_basis_id]') !== -1 && ! field.value && fobBasisId) {
+                    field.value = String(fobBasisId);
                 }
             });
+            renderIncentiveClaims();
         }
 
         toggle.addEventListener('change', apply);
         apply();
     });
+
+    /* ------------------------------------------------------------------ *
+     * Live claim preview: Rate% × FOB vs Cap × PCS → lower.
+     * ------------------------------------------------------------------ */
+    const sampleFob = document.getElementById('incentive-sample-fob');
+    const samplePcs = document.getElementById('incentive-sample-pcs');
+    const claimRows = document.getElementById('incentive-claim-rows');
+    const schemeLabels = @json(ProductIncentive::SCHEMES);
+
+    function schemeClaim(scheme, fob, pcs) {
+        const p1 = parseFloat(document.querySelector('[name="incentives[' + scheme + '][percent_1]"]')?.value) || 0;
+        const p2El = document.querySelector('[name="incentives[' + scheme + '][percent_2]"]');
+        const p2 = p2El && ! p2El.disabled ? (parseFloat(p2El.value) || 0) : 0;
+        const cap1Raw = document.querySelector('[name="incentives[' + scheme + '][cap_value]"]')?.value;
+        const cap2El = document.querySelector('[name="incentives[' + scheme + '][cap_value_2]"]');
+        const cap2Raw = cap2El && ! cap2El.disabled ? cap2El.value : '';
+        const enabled = document.getElementById('incentive-toggle-' + scheme)?.checked;
+
+        function leg(pct, capRaw) {
+            const rateAmt = Math.max(0, fob * (pct / 100));
+            const hasCap = capRaw !== undefined && capRaw !== null && String(capRaw).trim() !== '';
+            const capAmt = hasCap ? Math.max(0, pcs * (parseFloat(capRaw) || 0)) : null;
+            const claim = capAmt === null ? rateAmt : Math.min(rateAmt, capAmt);
+            return { rateAmt, capAmt, claim, pct };
+        }
+
+        // RoSCTL with both caps filled → two independent legs (matches sheet U + Y).
+        const hasCap2 = cap2Raw !== undefined && cap2Raw !== null && String(cap2Raw).trim() !== '';
+        if (scheme === 'rosctl' && p2 > 0 && hasCap2) {
+            const a = leg(p1, cap1Raw);
+            const b = leg(p2, cap2Raw);
+            return {
+                ratePct: a.pct + b.pct,
+                rateAmt: a.rateAmt + b.rateAmt,
+                capAmt: (a.capAmt || 0) + (b.capAmt || 0),
+                claim: a.claim + b.claim,
+                enabled: enabled,
+                paired: true,
+            };
+        }
+
+        const combined = leg(p1 + p2, cap1Raw);
+        return {
+            ratePct: combined.pct,
+            rateAmt: combined.rateAmt,
+            capAmt: combined.capAmt,
+            claim: combined.claim,
+            enabled: enabled,
+            paired: false,
+        };
+    }
+
+    function renderIncentiveClaims() {
+        if (! claimRows) return;
+        const fob = parseFloat(sampleFob?.value) || 0;
+        const pcs = parseFloat(samplePcs?.value) || 0;
+        const lines = [];
+        Object.keys(schemeLabels).forEach(function (scheme) {
+            const row = schemeClaim(scheme, fob, pcs);
+            if (! row.enabled || row.ratePct <= 0) return;
+            const capText = row.capAmt === null
+                ? 'no cap'
+                : ('Cap×PCS = ' + row.capAmt.toFixed(2));
+            lines.push(
+                '<div class="mb-1"><strong>' + schemeLabels[scheme] + '</strong>: '
+                + 'Rate×FOB = ' + row.rateAmt.toFixed(2)
+                + ' · ' + capText
+                + ' → <span class="text-success">Claim ₹' + row.claim.toFixed(2) + '</span></div>'
+            );
+        });
+        claimRows.innerHTML = lines.length
+            ? lines.join('')
+            : '<span class="text-body-secondary">Turn on a scheme and enter Rate % to preview the claim.</span>';
+    }
+
+    sampleFob?.addEventListener('input', renderIncentiveClaims);
+    samplePcs?.addEventListener('input', renderIncentiveClaims);
+    document.querySelectorAll('[data-incentive-field]').forEach(function (el) {
+        el.addEventListener('input', renderIncentiveClaims);
+        el.addEventListener('change', renderIncentiveClaims);
+    });
+    renderIncentiveClaims();
 
     /* ------------------------------------------------------------------ *
      * "Tell me if a code / name is already taken" (sheet cols B and C).

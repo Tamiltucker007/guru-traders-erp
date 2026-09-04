@@ -23,7 +23,7 @@ class DocumentFormatUnit extends Model
      *
      * @var array<int, string>
      */
-    public const DEFAULTS = ['PCS', 'SET', 'MTR', 'KGS', 'PAIR', 'DOZ'];
+    public const DEFAULTS = ['PCS', 'SET', 'MTR', 'SQ. MTR', 'KGS', 'PAIR', 'DOZ'];
 
     protected function casts(): array
     {

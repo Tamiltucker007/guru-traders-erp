@@ -32,11 +32,11 @@ class ProductController extends Controller implements HasMiddleware
     {
         return [
             new Middleware('permission:product.view', only: ['index', 'show', 'checkCode']),
-            new Middleware('permission:product.create', only: ['create', 'store']),
+            new Middleware('permission:product.create', only: ['create', 'store', 'duplicate']),
             new Middleware('permission:product.edit', only: ['edit', 'update', 'toggleStatus']),
             new Middleware('permission:product.delete', only: ['destroy']),
             // Reachable from either the create or the edit form.
-            new Middleware('permission:product.create|product.edit', only: ['storeGstRate']),
+            new Middleware('permission:product.create|product.edit', only: ['storeGstRate', 'storeUnit']),
         ];
     }
 
@@ -60,7 +60,30 @@ class ProductController extends Controller implements HasMiddleware
 
     public function create(): View
     {
-        return view('masters.products.create', $this->formData());
+        return view('masters.products.create', $this->formData() + [
+            'product' => null,
+            'isDuplicate' => false,
+        ]);
+    }
+
+    /**
+     * Open Add Product pre-filled from an existing row — client: often only
+     * price band / GST change. Unique item code must be typed fresh.
+     */
+    public function duplicate(Product $product): View
+    {
+        $product->load(['incentives', 'bomItems']);
+
+        $draft = $product->replicate();
+        $draft->item_group_code = null;
+        $draft->name = $product->name.' (Copy)';
+        $draft->setRelation('incentives', $product->incentives);
+        $draft->setRelation('bomItems', $product->bomItems);
+
+        return view('masters.products.create', $this->formData($product) + [
+            'product' => $draft,
+            'isDuplicate' => true,
+        ]);
     }
 
     public function store(StoreProductRequest $request): RedirectResponse
@@ -178,6 +201,39 @@ class ProductController extends Controller implements HasMiddleware
         );
 
         return response()->json(['id' => $gstRate->id, 'name' => $gstRate->label]);
+    }
+
+    /**
+     * Quick-add a unit from the Product form — same "add more in the future"
+     * pattern as GST. Attaches the name to every active Order Format so the
+     * shared unit list (DocumentFormatUnit) stays the single source.
+     */
+    public function storeUnit(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:20', 'regex:/^[A-Za-z0-9 .\\/-]+$/'],
+        ]);
+
+        $name = strtoupper(trim($data['name']));
+
+        $formats = \App\Models\DocumentFormat::query()
+            ->where('status', 'active')
+            ->get();
+
+        if ($formats->isEmpty()) {
+            // No format yet — still return the typed value so the product can
+            // save it; unitOptions() already keeps product-owned values.
+            return response()->json(['id' => $name, 'name' => $name]);
+        }
+
+        foreach ($formats as $format) {
+            $format->units()->firstOrCreate(
+                ['name' => $name],
+                ['sort_order' => ((int) $format->units()->max('sort_order')) + 1],
+            );
+        }
+
+        return response()->json(['id' => $name, 'name' => $name]);
     }
 
     /**
