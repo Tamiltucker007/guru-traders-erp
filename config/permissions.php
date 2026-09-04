@@ -146,6 +146,12 @@ return [
         ],
 
         'Finance' => [
+            'billing'          => ['label' => 'Billing & Invoices', 'actions' => ['view', 'create', 'edit', 'delete', 'export'], 'built' => true],
+            'finance-tracker'  => ['label' => 'Finance Tracker',    'actions' => ['view', 'create', 'edit', 'delete', 'export'], 'built' => true],
+            'voucher'          => ['label' => 'Vouchers',           'actions' => ['view', 'create', 'edit', 'delete', 'approve'], 'built' => true],
+            'budget'           => ['label' => 'Budget Planner',     'actions' => ['view', 'create', 'edit', 'delete'], 'built' => true],
+            'payroll'          => ['label' => 'Payroll & Salary',   'actions' => ['view', 'create', 'edit', 'delete', 'process'], 'built' => true],
+            'gst-filing'       => ['label' => 'GST Filings',        'actions' => ['view', 'create', 'edit'], 'built' => true],
             'purchase-bill'    => ['label' => 'Purchase Bills',    'built' => true],
             'debit-note'       => ['label' => 'Debit Notes',       'actions' => ['view', 'create', 'edit', 'delete', 'approve'], 'built' => true],
             'payment'          => ['label' => 'Supplier Payments', 'actions' => ['view', 'create', 'edit', 'delete', 'approve'], 'built' => true],
