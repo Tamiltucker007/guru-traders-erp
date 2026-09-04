@@ -70,6 +70,7 @@ class ProductService
                     'percent_1'            => $row['percent_1'],
                     'percent_2'            => $row['percent_2'] ?? null,
                     'cap_value'            => $row['cap_value'] ?? null,
+                    'cap_value_2'          => $row['cap_value_2'] ?? null,
                     'calculation_basis_id' => $row['calculation_basis_id'] ?? null,
                 ]
             );

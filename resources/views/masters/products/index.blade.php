@@ -92,6 +92,12 @@
                                             <i class="bi bi-eye"></i>
                                         </a>
                                     @endcan
+                                    @can('product.create')
+                                        <a href="{{ route('masters.products.duplicate', $product) }}"
+                                           class="btn btn-outline-secondary" data-bs-toggle="tooltip" title="Duplicate">
+                                            <i class="bi bi-copy"></i>
+                                        </a>
+                                    @endcan
                                     @can('product.edit')
                                         <a href="{{ route('masters.products.edit', $product) }}"
                                            class="btn btn-outline-primary" data-bs-toggle="tooltip" title="Edit">
