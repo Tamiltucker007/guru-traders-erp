@@ -9,6 +9,7 @@ use App\Models\Agent;
 use App\Models\AgentCommission;
 use App\Models\CalculationBasis;
 use App\Models\Category;
+use App\Models\City;
 use App\Models\Currency;
 use App\Services\Masters\AgentService;
 use Illuminate\Http\JsonResponse;
@@ -149,7 +150,50 @@ class AgentController extends Controller implements HasMiddleware
             'commissionPayers' => Agent::COMMISSION_PAYERS,
             'paymentTerms'     => Agent::PAYMENT_TERMS,
             'commissionTypes'  => AgentCommission::TYPES,
+            'banks'            => $this->banksForAgent($agent),
+            'cities'           => $this->citiesForAgent($agent),
         ];
+    }
+
+    /**
+     * Flat city list for the agent form (searchable). Agent stores the city
+     * name as text, not a city_id, so options are name => name. If this agent
+     * already has a city outside the seeded list (e.g. overseas), keep it.
+     *
+     * @return array<string, string>
+     */
+    private function citiesForAgent(?Agent $agent = null): array
+    {
+        $cities = City::active()
+            ->orderBy('name')
+            ->pluck('name', 'name')
+            ->all();
+
+        $current = old('city', $agent?->city);
+        if (filled($current) && ! array_key_exists($current, $cities)) {
+            $cities = [$current => $current] + $cities;
+        }
+
+        return $cities;
+    }
+
+    /**
+     * Bank-name dropdown options. Always includes the common list; if this
+     * agent already has a bank outside the list, keep it so edit does not blank.
+     *
+     * @return array<string, string>
+     */
+    private function banksForAgent(?Agent $agent = null): array
+    {
+        $banks = collect(config('indian_banks', []))
+            ->mapWithKeys(fn (string $name) => [$name => $name]);
+
+        $current = $agent?->bank_name;
+        if (filled($current) && ! $banks->has($current)) {
+            $banks->put($current, $current);
+        }
+
+        return $banks->sortKeys()->all();
     }
 
     /**

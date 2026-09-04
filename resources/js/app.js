@@ -40,6 +40,13 @@ window.upgradeSearchableSelect = function (el) {
         settings.plugins = ['remove_button'];
     }
 
+    // Free-text create with no server round-trip (e.g. bank names): type a
+    // value that is not in the list and it becomes an option on blur/enter.
+    if (el.dataset.allowCreate === 'true' && ! el.dataset.createUrl) {
+        settings.create = true;
+        settings.createOnBlur = true;
+    }
+
     // "Drop down, add more in the future" (Buyer sheet col Q, Payment
     // Terms): typing a name not already in the list posts it to
     // data-create-url and adds the row it comes back with.
