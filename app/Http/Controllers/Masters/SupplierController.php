@@ -256,7 +256,12 @@ class SupplierController extends Controller implements HasMiddleware
     {
         return response()->json(
             $this->agentsFor($request->string('party_type')->toString())
-                ->map(fn (Agent $agent) => ['id' => $agent->id, 'name' => $agent->label])
+                ->map(fn (Agent $agent) => [
+                    'id'   => $agent->id,
+                    'name' => $agent->label,
+                    // All rates from Agent Master — Supplier form picks one (no typing).
+                    'commissions' => $this->commissionOptions($agent),
+                ])
                 ->values()
         );
     }
@@ -270,8 +275,26 @@ class SupplierController extends Controller implements HasMiddleware
     {
         return Agent::active()
             ->whereIn('agent_type', Supplier::AGENT_SIDES[$partyType] ?? ['supplier'])
+            ->with(['commissions.currency'])
             ->orderBy('name')
             ->get();
+    }
+
+    /**
+     * Agent Master commission rows as {type, value, label} for the Supplier form.
+     *
+     * @return array<int, array{type: string, value: float, label: string}>
+     */
+    private function commissionOptions(Agent $agent): array
+    {
+        return $agent->commissions
+            ->map(fn ($row) => [
+                'type'  => $row->commission_type === 'percent' ? 'percent' : 'amount',
+                'value' => (float) $row->amount,
+                'label' => $row->label,
+            ])
+            ->values()
+            ->all();
     }
 
     /**
@@ -307,6 +330,19 @@ class SupplierController extends Controller implements HasMiddleware
             // Col X — filtered by party type; see agents() above.
             'agents' => $this->agentsFor($partyType)->pluck('label', 'id'),
 
+            /*
+             * Client: agent rates come from Agent Master (may be several % / pc
+             * rows). Map is agent id => list of {type, value, label}.
+             */
+            'agentCommissions' => Agent::active()
+                ->whereIn('agent_type', ['supplier', 'jobber'])
+                ->with(['commissions.currency'])
+                ->get()
+                ->mapWithKeys(fn (Agent $agent) => [
+                    $agent->id => $this->commissionOptions($agent),
+                ])
+                ->all(),
+
             'countries' => Country::active()->orderBy('name')->get()->pluck('label', 'id'),
 
             // Change request #4 — "Default the Country to India".
@@ -319,7 +355,20 @@ class SupplierController extends Controller implements HasMiddleware
             'cities' => $stateId
                 ? City::active()->where('state_id', $stateId)->orderBy('name')->pluck('name', 'id')
                 : collect(),
+
+            'banks' => $this->banksList(),
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function banksList(): array
+    {
+        return collect(config('indian_banks', []))
+            ->mapWithKeys(fn (string $name) => [$name => $name])
+            ->sortKeys()
+            ->all();
     }
 
     /**

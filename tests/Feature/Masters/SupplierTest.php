@@ -743,6 +743,37 @@ class SupplierTest extends TestCase
         $this->assertStringNotContainsString('David', $both);   // buyer side
     }
 
+    public function test_the_agents_endpoint_includes_commission_from_agent_master(): void
+    {
+        $user = $this->actingAsRole('Super Admin');
+
+        $rows = $this->actingAs($user)
+            ->getJson(route('masters.suppliers.agents', ['party_type' => 'supplier']))
+            ->assertOk()
+            ->json();
+
+        $suresh = collect($rows)->first(fn ($row) => str_contains($row['name'], 'Suresh'));
+
+        $this->assertNotNull($suresh);
+        $this->assertArrayHasKey('commissions', $suresh);
+        $this->assertNotEmpty($suresh['commissions']);
+        $this->assertSame('percent', $suresh['commissions'][0]['type']);
+        $this->assertEqualsWithDelta(2.0, $suresh['commissions'][0]['value'], 0.0001);
+        $this->assertSame('2%', $suresh['commissions'][0]['label']);
+    }
+
+    public function test_supplier_create_form_offers_commission_rate_dropdown(): void
+    {
+        $html = $this->actingAs($this->actingAsRole('Super Admin'))
+            ->get(route('masters.suppliers.create'))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringContainsString('id="agent_commission_pick"', $html);
+        $this->assertStringContainsString('name="agent_commission_value"', $html);
+        $this->assertStringContainsString('Rates come from Agent Master', $html);
+    }
+
     public function test_an_inactive_agent_is_not_offered(): void
     {
         Agent::create(['display_code' => 'AGX', 'name' => 'Retired Agent', 'status' => 'inactive', 'agent_type' => 'supplier']);
