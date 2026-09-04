@@ -93,6 +93,27 @@ abstract class AgentRequest extends FormRequest
         }
 
         /*
+         * Client: when the supplier pays the commission it is only a deduction
+         * on their bill — payment terms and commission % are irrelevant to us.
+         * Clear them so a leftover value from a previous "we pay" choice is not
+         * saved against a supplier-pays agent.
+         */
+        if ($this->input('commission_paid_by') === 'supplier') {
+            $this->merge([
+                'payment_term'         => null,
+                'payment_term_custom'  => null,
+                'calculation_basis_id' => null,
+                'commissions'          => [],
+                // Client: supplier-pays agents are only a master record — we do
+                // not settle them, so bank details are irrelevant.
+                'bank_name'            => null,
+                'account_number'       => null,
+                'ifsc_code'            => null,
+                'swift_code'           => null,
+            ]);
+        }
+
+        /*
          * Supplier-side commissions are always INR — the prototype hides the
          * currency picker for them. Dropping a posted currency here keeps a
          * hand-crafted request from labelling a domestic commission in USD.
@@ -105,6 +126,15 @@ abstract class AgentRequest extends FormRequest
                 ),
             ]);
         }
+    }
+
+    /**
+     * Supplier-pays agents: commission is deducted from the supplier bill, so
+     * we do not need our own payment terms or a commission % entry.
+     */
+    protected function supplierPays(): bool
+    {
+        return $this->input('commission_paid_by') === 'supplier';
     }
 
     /**
@@ -153,29 +183,45 @@ abstract class AgentRequest extends FormRequest
                 ? ['required', 'string', 'size:10', 'regex:/^[A-Z]{5}[0-9]{4}[A-Z]$/']
                 : ['prohibited'],
 
-            // Bank block.
-            'bank_name'      => ['required', 'string', 'max:120'],
-            'account_number' => ['required', 'string', 'max:40'],
-            'ifsc_code'      => $domestic
-                ? ['required', 'string', 'size:11', 'regex:/^[A-Z]{4}0[A-Z0-9]{6}$/']
-                : ['prohibited'],
-            'swift_code'     => $domestic
-                ? ['prohibited']
-                : ['required', 'string', 'min:8', 'max:11', 'regex:/^[A-Z0-9]+$/'],
+            // Bank block — required when we settle the agent; optional/cleared
+            // when the supplier pays (record only).
+            'bank_name'      => $this->supplierPays()
+                ? ['nullable', 'string', 'max:120']
+                : ['required', 'string', 'max:120'],
+            'account_number' => $this->supplierPays()
+                ? ['nullable', 'string', 'max:40']
+                : ['required', 'string', 'max:40'],
+            'ifsc_code' => $this->supplierPays()
+                ? ['nullable', 'string', 'size:11', 'regex:/^[A-Z]{4}0[A-Z0-9]{6}$/']
+                : ($domestic
+                    ? ['required', 'string', 'size:11', 'regex:/^[A-Z]{4}0[A-Z0-9]{6}$/']
+                    : ['prohibited']),
+            'swift_code' => $this->supplierPays()
+                ? ['nullable', 'string', 'min:8', 'max:11', 'regex:/^[A-Z0-9]+$/']
+                : ($domestic
+                    ? ['prohibited']
+                    : ['required', 'string', 'min:8', 'max:11', 'regex:/^[A-Z0-9]+$/']),
 
             /*
-             * Commission. The basis says what a percentage is a percentage of,
-             * so it is required whenever a percent entry exists — and since at
-             * least one entry is required and the user picks the type, the
-             * simplest correct rule is to require the basis outright, which is
-             * what the prototype does.
+             * Commission. Basis and entries are required when we pay / buyer pays
+             * (we need a % to settle). When the supplier pays, the client said
+             * both are irrelevant — optional then.
              */
-            'calculation_basis_id' => ['required', 'integer', Rule::exists('calculation_bases', 'id')],
+            'calculation_basis_id' => $this->supplierPays()
+                ? ['nullable', 'integer', Rule::exists('calculation_bases', 'id')]
+                : ['required', 'integer', Rule::exists('calculation_bases', 'id')],
 
-            'commissions'                   => ['required', 'array', 'min:1'],
-            'commissions.*.commission_type' => ['required', Rule::in(array_keys(AgentCommission::TYPES))],
-            'commissions.*.amount'          => ['required', 'numeric', 'min:0', 'max:99999999.9999'],
-            'commissions.*.currency_id'     => ['nullable', 'integer', Rule::exists('currencies', 'id')],
+            'commissions'                   => $this->supplierPays()
+                ? ['nullable', 'array']
+                : ['required', 'array', 'min:1'],
+            'commissions.*.commission_type' => [
+                'nullable',
+                Rule::in(array_keys(AgentCommission::TYPES)),
+            ],
+            'commissions.*.amount' => $this->supplierPays()
+                ? ['nullable', 'numeric', 'min:0', 'max:99999999.9999']
+                : ['required', 'numeric', 'min:0', 'max:99999999.9999'],
+            'commissions.*.currency_id' => ['nullable', 'integer', Rule::exists('currencies', 'id')],
 
             /*
              * Which ledger the commission lands in. No default — guessing "we
@@ -184,9 +230,11 @@ abstract class AgentRequest extends FormRequest
              */
             'commission_paid_by' => ['required', Rule::in(array_keys(Agent::COMMISSION_PAYERS))],
 
-            'payment_term'        => ['required', Rule::in(array_keys(Agent::PAYMENT_TERMS))],
+            'payment_term' => $this->supplierPays()
+                ? ['nullable', Rule::in(array_keys(Agent::PAYMENT_TERMS))]
+                : ['required', Rule::in(array_keys(Agent::PAYMENT_TERMS))],
             'payment_term_custom' => [
-                Rule::requiredIf(fn () => $this->input('payment_term') === 'custom'),
+                Rule::requiredIf(fn () => ! $this->supplierPays() && $this->input('payment_term') === 'custom'),
                 'nullable', 'string', 'max:255',
             ],
 

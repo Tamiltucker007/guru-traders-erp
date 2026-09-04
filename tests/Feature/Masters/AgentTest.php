@@ -59,7 +59,7 @@ class AgentTest extends TestCase
             'commissions'          => [
                 ['commission_type' => 'percent', 'amount' => '2.5', 'currency_id' => null],
             ],
-            'commission_paid_by' => 'supplier',
+            'commission_paid_by' => 'us',
             'payment_term'       => 'after_supplier',
 
             'status' => 'active',
@@ -160,7 +160,7 @@ class AgentTest extends TestCase
             'name'                 => 'Test Agent Name',
             'agent_type'           => 'supplier',
             'calculation_basis_id' => $basis->id,
-            'commission_paid_by'   => 'supplier',
+            'commission_paid_by'   => 'us',
             'payment_term'         => 'after_supplier',
             'city'                 => 'Mumbai',
             'gst_number'           => '27AAECS1429B1Z6',
@@ -396,6 +396,48 @@ class AgentTest extends TestCase
         $this->actingAs($user)
             ->post(route('masters.agents.store'), $this->payload(['categories' => []]))
             ->assertSessionHasErrors('categories');
+    }
+
+    public function test_supplier_pays_does_not_require_payment_terms_or_commission_percent(): void
+    {
+        $user = $this->actingAsRole('Admin');
+
+        $this->actingAs($user)->post(route('masters.agents.store'), $this->payload([
+            'commission_paid_by'   => 'supplier',
+            'payment_term'         => null,
+            'payment_term_custom'  => null,
+            'calculation_basis_id' => null,
+            'commissions'          => [
+                ['commission_type' => 'percent', 'amount' => '', 'currency_id' => null],
+            ],
+            'bank_name'            => null,
+            'account_number'       => null,
+            'ifsc_code'            => null,
+        ]))->assertRedirect(route('masters.agents.index'));
+
+        $agent = Agent::where('display_code', 'AGT01')->first();
+        $this->assertNotNull($agent);
+        $this->assertNull($agent->payment_term);
+        $this->assertNull($agent->calculation_basis_id);
+        $this->assertNull($agent->bank_name);
+        $this->assertNull($agent->account_number);
+        $this->assertNull($agent->ifsc_code);
+        $this->assertCount(0, $agent->commissions);
+    }
+
+    public function test_we_pay_still_requires_commission_and_payment_terms(): void
+    {
+        $user = $this->actingAsRole('Admin');
+
+        $this->actingAs($user)
+            ->from(route('masters.agents.create'))
+            ->post(route('masters.agents.store'), $this->payload([
+                'commission_paid_by' => 'us',
+                'payment_term'       => null,
+                'commissions'        => [],
+            ]))
+            ->assertRedirect(route('masters.agents.create'))
+            ->assertSessionHasErrors(['payment_term', 'commissions']);
     }
 
     public function test_agent_display_code_must_be_alphanumeric_and_max_5(): void
